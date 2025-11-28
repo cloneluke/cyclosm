@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import type { ToastMessage } from './components/Toast'
 import { Map } from './components/Map'
 import { SourceSelector } from './components/SourceSelector'
+import { LayerToggle } from './components/LayerToggle'
 import { MapControls } from './components/MapControls'
 import { Attribution } from './components/Attribution'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -26,6 +27,7 @@ function App() {
       <div className="app">
         <Map onError={addToast} />
         <SourceSelector />
+        <LayerToggle />
         <MapControls />
         <Attribution />
         <ToastContainer toasts={toasts} onRemove={removeToast} />

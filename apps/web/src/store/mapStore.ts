@@ -5,7 +5,7 @@ export const TILE_SOURCES = {
   local: {
     url: 'http://localhost:8080/tiles/{z}/{x}/{y}.pbf',
     name: 'Local Tile Server',
-    style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    style: '/cycling-style.json',
   },
   public: {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.pbf',
