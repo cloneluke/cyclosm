@@ -55,26 +55,28 @@ docker compose version
 sudo apt install -y git curl
 ```
 
-### 5. Install Node.js and pnpm (Optional, for web development)
-If you plan to work on the web app:
+### 5. Install Node.js (via NVM) and pnpm
+Install Node Version Manager to manage Node.js versions:
 
-**Node.js:**
 ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 source ~/.bashrc
 nvm install 20
 nvm use 20
+node --version  # Should show v20.19.6
 ```
 
-**pnpm:**
+Install pnpm (package manager for the monorepo):
 ```bash
 npm install -g pnpm
+pnpm --version  # Should show 9.x.x or higher
 ```
 
-Verify:
+Verify all installations:
 ```bash
-node --version
-pnpm --version
+node --version    # v20.19.6
+npm --version     # v11.6.4
+pnpm --version    # 9.x.x
 ```
 
 ## Post-Installation Steps

@@ -7,7 +7,7 @@ Modern vector tile map for cyclists built with MapLibre GL, Planetiler, and PMTi
 ### Prerequisites
 - Linux/macOS (Ubuntu 20.04+ or equivalent)
 - Docker & Docker Compose
-- Node.js 18+ and pnpm 8+ (for web development)
+- Node.js 20+ and pnpm 9+ (for web development)
 - 4GB RAM minimum (8GB+ recommended for tile generation)
 
 ### Setup
