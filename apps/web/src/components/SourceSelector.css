@@ -43,6 +43,7 @@
 .source-button:hover {
   border-color: #999;
   background: #f9f9f9;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .source-button.active {
@@ -55,3 +56,46 @@
   background: #1560a0;
   border-color: #1560a0;
 }
+
+@media (max-width: 768px) {
+  .source-selector {
+    top: 12px;
+    left: 12px;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .source-label {
+    font-size: 12px;
+  }
+
+  .source-button {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .source-buttons {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .source-selector {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .source-label {
+    display: none;
+  }
+
+  .source-buttons {
+    width: 100%;
+  }
+
+  .source-button {
+    flex: 1;
+    min-width: 40px;
+  }
+}
+
