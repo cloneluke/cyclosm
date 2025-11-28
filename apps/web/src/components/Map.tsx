@@ -25,53 +25,7 @@ export function Map() {
     try {
       const newMap = new maplibregl.Map({
         container: mapContainer.current,
-        style: {
-          version: 8,
-          sources: {
-            tiles: {
-              type: 'vector',
-              url: 'pmtiles://http://localhost:8080/tiles.pmtiles',
-            },
-          },
-          layers: [
-            {
-              id: 'background',
-              type: 'background',
-              paint: {
-                'background-color': '#f0f0f0',
-              },
-            },
-            {
-              id: 'water',
-              type: 'fill',
-              source: 'tiles',
-              'source-layer': 'water',
-              paint: {
-                'fill-color': '#88ccee',
-              },
-            },
-            {
-              id: 'roads',
-              type: 'line',
-              source: 'tiles',
-              'source-layer': 'roads',
-              paint: {
-                'line-color': '#666666',
-                'line-width': 1,
-              },
-            },
-            {
-              id: 'cycleways',
-              type: 'line',
-              source: 'tiles',
-              'source-layer': 'cycleways',
-              paint: {
-                'line-color': '#00aa00',
-                'line-width': 2,
-              },
-            },
-          ],
-        },
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
         center: center as [number, number],
         zoom: zoom,
       });
