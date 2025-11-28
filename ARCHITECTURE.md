@@ -26,7 +26,9 @@
 - Tile source switching
 - Simple UI (map controls, source selector)
 
-### 🔜 Phase 3+: Features
+**Status:** Planning complete. See [docs/PHASE2_SUMMARY.md](docs/PHASE2_SUMMARY.md) for evaluation and [docs/PHASE2_IMPLEMENTATION.md](docs/PHASE2_IMPLEMENTATION.md) for sprint plan.
+
+### 🔜 Phase 3+: Advanced Features
 - Multiple style variants (light/dark/accessible)
 - Offline caching with IndexedDB
 - iOS/Android apps (post-MVP)
