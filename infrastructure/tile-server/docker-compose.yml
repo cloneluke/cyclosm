@@ -5,20 +5,14 @@ services:
     build: .
     container_name: cyclosm-planetiler
     environment:
-      # Adjust these for your region/machine
       PLANETILER_MEMORY: "8g"
-      # For MVP, use a region extract instead of full planet
-      # Options: 
-      # - https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf (full planet, ~70GB)
-      # - Use geofabrik for specific regions: https://download.geofabrik.de/
-      OSM_SOURCE: "https://download.geofabrik.de/north-america/us/colorado-latest.osm.pbf"
+      OSM_SOURCE: "colorado"
     volumes:
       - ./data:/data
-      - ./planetiler-config.yaml:/config.yaml
+      - ./planetiler-config.yaml:/data/planetiler-config.yaml:ro
     entrypoint: ["/entrypoint.sh"]
     command: ["tile-generation"]
     profiles: ["tile-generation"]
-    # For MVP: run this once to generate tiles, then stop
 
   tile-server:
     build: .

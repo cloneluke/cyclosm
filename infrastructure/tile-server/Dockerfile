@@ -7,8 +7,11 @@ RUN apt-get update && apt-get install -y \
     gzip \
     && rm -rf /var/lib/apt/lists/*
 
+# Create data directory
+RUN mkdir -p /data
+
 # Download Planetiler (latest release)
-RUN curl -L https://github.com/onthegomap/planetiler/releases/download/v0.7.0/planetiler.jar \
+RUN curl -L https://github.com/onthegomap/planetiler/releases/download/v0.8.1/planetiler.jar \
     -o /usr/local/bin/planetiler.jar && \
     chmod +x /usr/local/bin/planetiler.jar
 

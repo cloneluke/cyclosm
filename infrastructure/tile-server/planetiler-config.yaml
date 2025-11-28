@@ -1,38 +1,98 @@
-# Planetiler configuration for CyclOSM Vector
-# Focuses on cycling-relevant features and infrastructure
+schema_name: CyclOSM Cycling Map
+schema_description: A map focused on cycling infrastructure and amenities
+attribution: <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>
+
+sources:
+  osm:
+    type: osm
+    url: "geofabrik:colorado"
 
 layers:
-  # Transportation network
+  # Roads for cycling navigation
   - id: roads
     features:
-      - geometry: line
-        filter:
-          highway:
-            - primary
-            - secondary
-            - tertiary
-            - residential
-            - unclassified
-            - cycleway
+      - source: osm
+        geometry: line
+        include_when:
+          highway: [primary, secondary, tertiary, residential, unclassified, living_street, cycleway]
         attributes:
           - key: highway
+          - key: name
 
-  # Points of interest
+  # Water features for context
+  - id: water
+    features:
+      - source: osm
+        geometry: polygon
+        include_when:
+          natural: water
+        attributes:
+          - key: name
+
+  # Points of interest for cyclists
   - id: poi
     features:
-      - geometry: point
-        filter:
-          amenity:
-            - cafe
-            - restaurant
-            - pharmacy
+      - source: osm
+        geometry: point
+        include_when:
+          amenity: [cafe, restaurant, fast_food, pharmacy]
         attributes:
           - key: amenity
           - key: name
 
-  # Water for context
-  - id: water
-    features:
-      - geometry: polygon
-        filter:
+      - source: osm
+        geometry: point
+        include_when:
+          shop: bicycle
+        attributes:
+          - key: shop
+          - key: name
+
+examples:
+  - name: Primary road
+    input:
+      source: osm
+      geometry: line
+      tags:
+        highway: primary
+    output:
+      - layer: roads
+        geometry: line
+        tags:
+          highway: primary
+
+  - name: Cycleway
+    input:
+      source: osm
+      geometry: line
+      tags:
+        highway: cycleway
+    output:
+      - layer: roads
+        geometry: line
+        tags:
+          highway: cycleway
+
+  - name: Water body
+    input:
+      source: osm
+      geometry: polygon
+      tags:
+        natural: water
+    output:
+      - layer: water
+        geometry: polygon
+        tags:
           natural: water
+
+  - name: Cafe
+    input:
+      source: osm
+      geometry: point
+      tags:
+        amenity: cafe
+    output:
+      - layer: poi
+        geometry: point
+        tags:
+          amenity: cafe

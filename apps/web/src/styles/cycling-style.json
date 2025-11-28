@@ -10,9 +10,8 @@
   "sources": {
     "local-tiles": {
       "type": "vector",
-      "tiles": ["http://localhost:8080/tiles/{z}/{x}/{y}.pbf"],
-      "minzoom": 0,
-      "maxzoom": 14
+      "url": "pmtiles://http://localhost:8080/data/tiles.pmtiles",
+      "attribution": "© OpenMapTiles © OpenStreetMap contributors"
     }
   },
   "layers": [
@@ -36,18 +35,19 @@
       "id": "roads-all",
       "type": "line",
       "source": "local-tiles",
-      "source-layer": "roads",
+      "source-layer": "road",
+      "filter": ["!=", ["get", "class"], "path"],
       "paint": {
         "line-color": [
           "match",
-          ["get", "highway"],
-          "cycleway",
-          "#2fb344",
-          "primary",
+          ["get", "class"],
+          "motorway",
           "#e8b78a",
-          "secondary",
+          "trunk",
+          "#e8b78a",
+          "primary",
           "#f4e4c3",
-          "tertiary",
+          "secondary",
           "#fff8f3",
           "residential",
           "#ffffff",
@@ -71,19 +71,10 @@
       "id": "cycleways",
       "type": "line",
       "source": "local-tiles",
-      "source-layer": "roads",
+      "source-layer": "road",
+      "filter": ["==", ["get", "class"], "path"],
       "paint": {
-        "line-color": [
-          "match",
-          ["get", "highway"],
-          "cycleway",
-          "#2fb344",
-          "primary",
-          "#e8b78a",
-          "secondary",
-          "#f4e4c3",
-          "#ffffff"
-        ],
+        "line-color": "#2fb344",
         "line-width": {
           "base": 1.1,
           "stops": [
@@ -107,6 +98,7 @@
       "type": "circle",
       "source": "local-tiles",
       "source-layer": "poi",
+      "filter": ["in", ["get", "class"], ["literal", ["cafe", "restaurant"]]],
       "paint": {
         "circle-radius": {
           "base": 5,
@@ -118,13 +110,11 @@
         },
         "circle-color": [
           "match",
-          ["get", "amenity"],
+          ["get", "class"],
           "cafe",
           "#d4a574",
           "restaurant",
           "#d47b3d",
-          "pharmacy",
-          "#e74c3c",
           "#999999"
         ],
         "circle-opacity": 0.8
@@ -139,6 +129,7 @@
       "source": "local-tiles",
       "source-layer": "poi",
       "minzoom": 12,
+      "filter": ["in", ["get", "class"], ["literal", ["cafe", "restaurant"]]],
       "layout": {
         "text-field": ["get", "name"],
         "text-size": 10,

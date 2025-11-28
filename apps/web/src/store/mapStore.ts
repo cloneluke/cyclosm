@@ -1,12 +1,11 @@
 import { create } from 'zustand';
 import type { Map } from 'maplibre-gl';
-import cyclingStyle from '../styles/cycling-style.json';
 
 export const TILE_SOURCES = {
   local: {
-    url: 'http://localhost:8080/tiles/{z}/{x}/{y}.pbf',
+    url: 'pmtiles://http://localhost:8080/data/tiles.pmtiles',
     name: 'Local Tile Server',
-    style: cyclingStyle as any,
+    style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
   },
   public: {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.pbf',
@@ -41,8 +40,15 @@ export const useMapStore = create<MapState>((set) => ({
   error: null,
   setCenter: (center) => set({ center }),
   setZoom: (zoom) => set({ zoom }),
-  setTileSource: (source) => set({ tileSource: source }),
+  setTileSource: (source) => {
+    console.log('Switching tile source to:', source);
+    console.log('Tile URL:', TILE_SOURCES[source].url);
+    set({ tileSource: source });
+  },
   setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => set({ error }),
+  setError: (error) => {
+    console.error('Setting map error:', error);
+    set({ error });
+  },
   clearError: () => set({ error: null }),
 }));
