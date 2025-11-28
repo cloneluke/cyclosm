@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react'
+import type { ToastMessage } from './components/Toast'
 import { Map } from './components/Map'
 import { SourceSelector } from './components/SourceSelector'
 import { MapControls } from './components/MapControls'
 import { Attribution } from './components/Attribution'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { ToastContainer, ToastMessage } from './components/Toast'
+import { ToastContainer } from './components/Toast'
 import './App.css'
 
 function App() {
