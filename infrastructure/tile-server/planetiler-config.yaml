@@ -1,0 +1,33 @@
+# Planetiler configuration for CyclOSM Vector
+# Focuses on cycling-relevant features and infrastructure
+
+layers:
+  # Transportation network
+  - id: roads
+    features:
+      - geometry: line
+        filter:
+          highway:
+            - primary
+            - secondary
+            - tertiary
+            - residential
+            - unclassified
+            - cycleway
+
+  # Points of interest
+  - id: poi
+    features:
+      - geometry: point
+        filter:
+          amenity:
+            - cafe
+            - restaurant
+            - pharmacy
+
+  # Water for context
+  - id: water
+    features:
+      - geometry: polygon
+        filter:
+          natural: water
