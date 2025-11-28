@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import type { Map } from 'maplibre-gl';
+import cyclingStyle from '../styles/cycling-style.json';
 
 export const TILE_SOURCES = {
   local: {
     url: 'http://localhost:8080/tiles/{z}/{x}/{y}.pbf',
     name: 'Local Tile Server',
-    style: '/cycling-style.json',
+    style: cyclingStyle as any,
   },
   public: {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.pbf',
