@@ -5,7 +5,7 @@
 **Name:** cyclosm-vector  
 **Structure:** Single repository with pnpm workspaces  
 **Tech Stack:** TypeScript, MapLibre GL, Planetiler, PMTiles  
-**Status:** Phase 1 complete - Monorepo & tile server foundation ready  
+**Status:** Phase 2 complete - MVP web app with full functionality deployed  
 
 ---
 
@@ -19,14 +19,33 @@
 - Build scripts for Docker setup, tile generation, and server startup
 - Comprehensive setup documentation (Ubuntu/Docker/snap)
 
-### 📋 Phase 2: Web App (Next)
-- React + Vite PWA scaffold
-- MapLibre GL integration
-- Basic cycling map with layer controls
-- Tile source switching
-- Simple UI (map controls, source selector)
+### ✅ Phase 2: Web App MVP (Complete)
+**2.1-2.3: Core App Setup**
+- React + Vite + TypeScript web app
+- MapLibre GL integration with Carto Positron basemap
+- Zustand state management
+- Dev server running on localhost:5173
 
-**Status:** Planning complete. See [docs/PHASE2_SUMMARY.md](docs/PHASE2_SUMMARY.md) for evaluation and [docs/PHASE2_IMPLEMENTATION.md](docs/PHASE2_IMPLEMENTATION.md) for sprint plan.
+**2.4: Tile Source Selector**
+- UI component for switching between local and public tiles
+- Store integration with tile source configuration
+- Active state styling
+
+**2.5: Error Handling & Resilience**
+- ErrorBoundary component catching React errors
+- Toast notification system (auto-dismiss, 4 types)
+- Map error event listeners
+- Error state management in store
+
+**2.6: Map Controls & UI Polish**
+- MapControls with zoom, reset, geolocation buttons
+- Geolocation support with browser API integration
+- Attribution footer (OSM + CartoDB credits)
+- Responsive design (desktop/tablet/mobile)
+- Touch-friendly controls
+- Proper z-index management
+
+**Status:** ✅ Complete and deployed. See [docs/CODEBASE_EVALUATION.md](docs/CODEBASE_EVALUATION.md) for post-Phase-2 evaluation.
 
 ### 🔜 Phase 3+: Advanced Features
 - Multiple style variants (light/dark/accessible)
@@ -34,6 +53,7 @@
 - iOS/Android apps (post-MVP)
 - CDN deployment infrastructure
 - Advanced cycling features (route planning, etc.)
+- MapLibre GL v5 upgrade (breaking changes - plan ahead)
 
 ---
 
