@@ -20,9 +20,14 @@ interface MapState {
   center: [number, number];
   zoom: number;
   tileSource: 'local' | 'public';
+  isLoading: boolean;
+  error: string | null;
   setCenter: (center: [number, number]) => void;
   setZoom: (zoom: number) => void;
   setTileSource: (source: 'local' | 'public') => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
@@ -31,7 +36,12 @@ export const useMapStore = create<MapState>((set) => ({
   center: [-105.2705, 40.0150], // Colorado center
   zoom: 8,
   tileSource: 'public',
+  isLoading: false,
+  error: null,
   setCenter: (center) => set({ center }),
   setZoom: (zoom) => set({ zoom }),
   setTileSource: (source) => set({ tileSource: source }),
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+  clearError: () => set({ error: null }),
 }));

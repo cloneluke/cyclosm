@@ -1,0 +1,48 @@
+.error-boundary {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.error-content {
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 500px;
+}
+
+.error-content h2 {
+  color: #d32f2f;
+  font-size: 24px;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+.error-message {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 16px 0 24px 0;
+  word-break: break-word;
+}
+
+.error-button {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #1f77b4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.error-button:hover {
+  background: #1560a0;
+}
