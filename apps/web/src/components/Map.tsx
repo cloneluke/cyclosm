@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
-import { PMTiles, Protocol } from 'pmtiles';
+import { Protocol } from 'pmtiles';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useMapStore } from '../store/mapStore';
+import { useMapStore, TILE_SOURCES } from '../store/mapStore';
 import './Map.css';
 
 // Register PMTiles protocol
@@ -10,7 +10,7 @@ let protocolInitialized = false;
 
 export function Map() {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const { map, setMap, center, zoom } = useMapStore();
+  const { setMap, center, zoom, tileSource } = useMapStore();
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -25,7 +25,7 @@ export function Map() {
     try {
       const newMap = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        style: TILE_SOURCES[tileSource].style,
         center: center as [number, number],
         zoom: zoom,
       });
@@ -40,7 +40,7 @@ export function Map() {
     } catch (error) {
       console.error('Error initializing map:', error);
     }
-  }, [setMap, center, zoom]);
+  }, [setMap, center, zoom, tileSource]);
 
   return <div ref={mapContainer} className="map-container" />;
 }

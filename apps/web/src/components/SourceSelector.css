@@ -1,0 +1,57 @@
+.source-selector {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+.source-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
+
+.source-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.source-button {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 2px solid #ccc;
+  background: white;
+  color: #333;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.source-button:hover {
+  border-color: #999;
+  background: #f9f9f9;
+}
+
+.source-button.active {
+  background: #1f77b4;
+  color: white;
+  border-color: #1f77b4;
+}
+
+.source-button.active:hover {
+  background: #1560a0;
+  border-color: #1560a0;
+}
