@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
-import { PMTiles, Protocol } from 'pmtiles';
+import { Protocol } from 'pmtiles';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useMapStore, TILE_SOURCES } from '../store/mapStore';
 import './Map.css';
@@ -10,18 +10,21 @@ const protocol = new Protocol({ metadata: true });
 
 // Wrap protocol.tile to remove bounds from TileJSON (MapLibre 5.x bounds strictness fix)
 const originalTile = protocol.tile.bind(protocol);
-const wrappedTile = (params: any, abortController: any) => {
-  return originalTile(params, abortController)
-    .then((result: any) => {
-      if (params.type === 'json' && result.data?.bounds) {
+const wrappedTile = (params: any, abortController?: any): any => {
+  const result = originalTile(params, abortController);
+  if (result instanceof Promise) {
+    return result.then((res: any) => {
+      if (params.type === 'json' && res.data?.bounds) {
         // Remove bounds to allow viewing outside strict PMTiles bounds
-        delete result.data.bounds;
+        delete res.data.bounds;
       }
-      return result;
+      return res;
     });
+  }
+  return result;
 };
 
-maplibregl.addProtocol('pmtiles', wrappedTile);
+maplibregl.addProtocol('pmtiles', wrappedTile as any);
 
 const PMTILES_URL = 'http://localhost:8080/tiles.pmtiles';
 
@@ -31,7 +34,18 @@ interface MapProps {
 
 export function Map({ onError }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const { setMap, center, zoom, tileSource, setError, clearError } = useMapStore();
+
+  const formatFeatureProperties = (properties: Record<string, any>) => {
+    // Extract cycling-relevant tags
+    const cyclingTags = ['highway', 'bicycle', 'cycleway', 'surface', 'name', 'access', 'foot', 'amenity', 'shop', 'leisure'];
+    
+    return cyclingTags
+      .filter(tag => properties[tag] !== undefined && properties[tag] !== null)
+      .map(tag => `${tag}: ${properties[tag]}`)
+      .join('<br/>');
+  };
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -185,6 +199,32 @@ export function Map({ onError }: MapProps) {
                   }
                 });
               }
+
+              // Add hover tooltip handlers
+              ['cycleways', 'poi-points', 'roads-base'].forEach(layerId => {
+                if (newMap.getLayer(layerId)) {
+                  newMap.on('mousemove', layerId, (e) => {
+                    if (e.features && e.features.length > 0) {
+                      const feature = e.features[0];
+                      const properties = feature.properties || {};
+                      const content = formatFeatureProperties(properties);
+                      
+                      if (tooltipRef.current && content) {
+                        tooltipRef.current.innerHTML = content;
+                        tooltipRef.current.style.left = e.originalEvent.pageX + 10 + 'px';
+                        tooltipRef.current.style.top = e.originalEvent.pageY + 10 + 'px';
+                        tooltipRef.current.style.display = 'block';
+                      }
+                    }
+                  });
+
+                  newMap.on('mouseleave', layerId, () => {
+                    if (tooltipRef.current) {
+                      tooltipRef.current.style.display = 'none';
+                    }
+                  });
+                }
+              });
             }
           });
         }
@@ -200,5 +240,28 @@ export function Map({ onError }: MapProps) {
     };
 
     initializeMap();
-  }, [setMap, center, zoom, tileSource, onError, setError, clearError]);  return <div ref={mapContainer} className="map-container" />;
+  }, [setMap, center, zoom, tileSource, onError, setError, clearError]);
+
+  return (
+    <div ref={mapContainer} className="map-container">
+      <div 
+        ref={tooltipRef} 
+        className="cycling-tooltip"
+        style={{
+          display: 'none',
+          position: 'fixed',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          color: '#fff',
+          padding: '8px 12px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          pointerEvents: 'none',
+          zIndex: 1000,
+          maxWidth: '300px',
+          wordWrap: 'break-word',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+        }}
+      />
+    </div>
+  );
 }
