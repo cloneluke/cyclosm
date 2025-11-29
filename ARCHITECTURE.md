@@ -4,8 +4,8 @@
 
 **Name:** cyclosm-vector  
 **Structure:** Single repository with pnpm workspaces  
-**Tech Stack:** TypeScript, MapLibre GL, Planetiler, PMTiles  
-**Status:** Phase 2 complete - MVP web app with full functionality deployed  
+**Tech Stack:** TypeScript, MapLibre GL, Planetiler 0.9.3, PMTiles  
+**Status:** Phase 3 complete - Custom cycling-focused tiles with cycleways from z5, web app MVP functional  
 
 ---
 
@@ -45,15 +45,43 @@
 - Touch-friendly controls
 - Proper z-index management
 
-**Status:** ✅ Complete and deployed. See [docs/CODEBASE_EVALUATION.md](docs/CODEBASE_EVALUATION.md) for post-Phase-2 evaluation.
+**Status:** ✅ Complete and deployed. See [docs/PHASE2_SUMMARY.md](docs/PHASE2_SUMMARY.md) for Phase 2 evaluation.
 
-### 🔜 Phase 3+: Advanced Features
-- Multiple style variants (light/dark/accessible)
+### ✅ Phase 3: Custom CyclOSM Schema & Tile Generation (Complete)
+**3.1: Planetiler Upgrade & Custom Schema**
+- Upgraded from Planetiler 0.8.1 to 0.9.3
+- Created custom YAML schema optimized for cycling
+- Cycleways, paths, tracks visible from zoom 5 (vs OpenMapTiles default z13)
+- Proper attribute structure (object-based, not strings)
+- No unsupported render blocks (client-side styling only)
+
+**3.2: Tile Generation & Optimization**
+- Generated 501MB PMTiles covering 5-state region
+- Zoom coverage: 0-14 with progressive feature inclusion
+- OSM data sources: Colorado, Minnesota, Iowa, South Dakota, Nebraska
+- Generation time: ~10-15 minutes on 8GB Java heap
+
+**3.3: Tile Server Configuration**
+- Fixed Nginx HTTP byte-range serving (`Accept-Ranges: bytes`)
+- Proper CORS headers for cross-origin tile requests
+- Cache headers for CDN optimization
+- Verified 200 OK responses with correct content headers
+
+**3.4: End-to-End Integration**
+- Web frontend successfully fetching custom tiles from tile server
+- MapLibre GL rendering features at correct zoom levels
+- Error handling for tile fetch failures
+- Zoom event logging for debugging
+
+**Status:** ✅ Complete. See [docs/PHASE3_SUMMARY.md](docs/PHASE3_SUMMARY.md) for Phase 3 details.
+
+### 🔜 Phase 4+: Advanced Features & Optimization
+- MapLibre GL style refinement (colors, icons, labels)
+- Performance profiling and optimization
+- Multi-region tile support (country/continent level)
 - Offline caching with IndexedDB
+- CI/CD automation for tile updates
 - iOS/Android apps (post-MVP)
-- CDN deployment infrastructure
-- Advanced cycling features (route planning, etc.)
-- MapLibre GL v5 upgrade (breaking changes - plan ahead)
 
 ---
 

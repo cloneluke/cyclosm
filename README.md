@@ -1,6 +1,8 @@
 # CyclOSM Vector
 
-Modern vector tile map for cyclists built with MapLibre GL, Planetiler, and PMTiles.
+Modern vector tile map for cyclists built with MapLibre GL, Planetiler 0.9.3, and PMTiles.
+
+**Status:** Phase 3 Complete - Custom cycling-focused tiles with cycleways visible from zoom 5 ✅
 
 ## Quick Start
 
@@ -17,20 +19,28 @@ Modern vector tile map for cyclists built with MapLibre GL, Planetiler, and PMTi
    ./scripts/setup-docker.sh
    ```
 
-2. **Generate tiles (one-time, ~15-30 min for Colorado):**
+2. **Generate custom tiles (one-time, ~10-15 min for 5-state region):**
    ```bash
-   ./scripts/generate-tiles.sh
+   # Start tile generation service
+   docker compose -f infrastructure/tile-server/docker-compose.yml up planetiler
    ```
 
 3. **Start tile server:**
    ```bash
-   ./scripts/start-tile-server.sh
+   docker compose -f infrastructure/tile-server/docker-compose.yml up tile-server
+   # Or: ./scripts/start-tile-server.sh
    ```
 
-4. **Verify tiles are serving:**
+4. **Start web dev server:**
    ```bash
-   curl http://localhost:8080/health
-   curl http://localhost:8080/tiles/0/0/0.pbf
+   cd apps/web && npm run dev
+   # Opens http://localhost:5173
+   ```
+
+5. **Verify tiles are serving:**
+   ```bash
+   curl http://localhost:8080/health              # Should return: OK
+   curl -I http://localhost:8080/data/tiles.pmtiles  # Should return: 200 OK
    ```
 
 ## Project Structure
