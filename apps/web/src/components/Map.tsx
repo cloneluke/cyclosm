@@ -23,7 +23,7 @@ const wrappedTile = (params: any, abortController: any) => {
 
 maplibregl.addProtocol('pmtiles', wrappedTile);
 
-const PMTILES_URL = 'http://localhost:8080/data/tiles.pmtiles';
+const PMTILES_URL = 'http://localhost:8080/tiles.pmtiles';
 
 interface MapProps {
   onError?: (message: string, type: 'error' | 'success' | 'info' | 'warning') => void;

@@ -3,7 +3,7 @@ import type { Map } from 'maplibre-gl';
 
 export const TILE_SOURCES = {
   local: {
-    url: 'pmtiles://http://localhost:8080/data/tiles.pmtiles',
+    url: 'pmtiles://http://localhost:8080/tiles.pmtiles',
     name: 'Local Tile Server',
     style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
   },

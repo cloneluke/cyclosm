@@ -10,7 +10,7 @@
   "sources": {
     "local-tiles": {
       "type": "vector",
-      "url": "pmtiles://http://localhost:8080/data/tiles.pmtiles",
+      "url": "pmtiles://http://localhost:8080/tiles.pmtiles",
       "attribution": "© OpenMapTiles © OpenStreetMap contributors"
     }
   },

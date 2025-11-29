@@ -4,7 +4,7 @@
   "description": "Vector tiles for cycling map",
   "version": "1.0.0",
   "tiles": [
-    "pmtiles://http://localhost:8080/data/tiles.pmtiles"
+    "pmtiles://http://localhost:8080/tiles.pmtiles"
   ],
   "vector_layers": [
     {
