@@ -1,0 +1,144 @@
+schema_name: CyclOSM
+schema_description: Cycling-focused map with paths visible from zoom 5
+attribution: <a href="https://www.openstreetmap.org/copyright">&copy; OpenStreetMap contributors</a>
+
+sources:
+  osm:
+    type: osm
+    local_path: /data/sources/merged.osm.pbf
+
+tag_mappings:
+  layer: integer
+  capacity: integer
+
+layers:
+  - id: transportation
+    features:
+      - source: osm
+        geometry: line
+        min_zoom: 4
+        include_when:
+          highway: [motorway, trunk]
+        attributes:
+          - key: highway
+          - key: name
+          - key: ref
+          - key: oneway
+            type: boolean
+          - key: bridge
+            type: boolean
+          - key: tunnel
+            type: boolean
+
+      - source: osm
+        geometry: line
+        min_zoom: 6
+        include_when:
+          highway: [primary, secondary]
+        attributes:
+          - key: highway
+          - key: name
+          - key: ref
+          - key: oneway
+            type: boolean
+          - key: surface
+
+      - source: osm
+        geometry: line
+        min_zoom: 9
+        include_when:
+          highway: [tertiary, unclassified, residential]
+        attributes:
+          - key: highway
+          - key: name
+          - key: surface
+          - key: oneway
+            type: boolean
+
+      - source: osm
+        geometry: line
+        min_zoom: 5
+        include_when:
+          highway: [cycleway, path, track, footway, pedestrian, steps]
+        attributes:
+          - key: highway
+          - key: name
+          - key: surface
+          - key: bicycle
+          - key: foot
+          - key: access
+
+      - source: osm
+        geometry: line
+        min_zoom: 12
+        include_when:
+          highway: [service, living_street]
+        attributes:
+          - key: highway
+          - key: service
+          - key: name
+
+  - id: water
+    features:
+      - source: osm
+        geometry: polygon
+        min_zoom: 0
+        include_when:
+          natural: water
+        attributes:
+          - key: name
+
+      - source: osm
+        geometry: polygon
+        min_zoom: 4
+        include_when:
+          waterway: [riverbank, dock, canal]
+        attributes:
+          - key: name
+          - key: waterway
+
+  - id: place
+    features:
+      - source: osm
+        geometry: point
+        min_zoom: 4
+        include_when:
+          place: [city, town]
+        attributes:
+          - key: name
+          - key: place
+          - key: population
+            type: integer
+
+      - source: osm
+        geometry: point
+        min_zoom: 10
+        include_when:
+          place: [village, hamlet, suburb, neighbourhood]
+        attributes:
+          - key: name
+          - key: place
+
+  - id: poi
+    features:
+      - source: osm
+        geometry: point
+        min_zoom: 14
+        include_when:
+          amenity: [bicycle_parking, bicycle_rental, bicycle_repair_station, cafe, restaurant, drinking_water, toilets]
+        attributes:
+          - key: amenity
+          - key: name
+          - key: capacity
+            type: integer
+
+      - source: osm
+        geometry: point
+        min_zoom: 14
+        include_when:
+          shop: bicycle
+        attributes:
+          - key: shop
+          - key: name
+
+

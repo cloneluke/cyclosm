@@ -9,7 +9,6 @@ services:
       OSM_SOURCE: "colorado"
     volumes:
       - ./data:/data
-      - ./planetiler-config.yaml:/data/planetiler-config.yaml:ro
     entrypoint: ["/entrypoint.sh"]
     command: ["tile-generation"]
     profiles: ["tile-generation"]

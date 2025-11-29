@@ -1,12 +1,29 @@
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
-import { Protocol } from 'pmtiles';
+import { PMTiles, Protocol } from 'pmtiles';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useMapStore, TILE_SOURCES } from '../store/mapStore';
 import './Map.css';
 
-// Register PMTiles protocol
-let protocolInitialized = false;
+// Register PMTiles protocol GLOBALLY before any map initialization
+const protocol = new Protocol({ metadata: true });
+
+// Wrap protocol.tile to remove bounds from TileJSON (MapLibre 5.x bounds strictness fix)
+const originalTile = protocol.tile.bind(protocol);
+const wrappedTile = (params: any, abortController: any) => {
+  return originalTile(params, abortController)
+    .then((result: any) => {
+      if (params.type === 'json' && result.data?.bounds) {
+        // Remove bounds to allow viewing outside strict PMTiles bounds
+        delete result.data.bounds;
+      }
+      return result;
+    });
+};
+
+maplibregl.addProtocol('pmtiles', wrappedTile);
+
+const PMTILES_URL = 'http://localhost:8080/data/tiles.pmtiles';
 
 interface MapProps {
   onError?: (message: string, type: 'error' | 'success' | 'info' | 'warning') => void;
@@ -19,58 +36,46 @@ export function Map({ onError }: MapProps) {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize PMTiles protocol once
-    if (!protocolInitialized) {
+    const initializeMap = async () => {
       try {
-        const protocol = new Protocol();
-        maplibregl.addProtocol('pmtiles', protocol.tile);
-        protocolInitialized = true;
-        console.log('PMTiles protocol initialized');
-      } catch (e) {
-        console.error('Failed to initialize PMTiles protocol:', e);
-      }
-    }
+        clearError();
+        
+        const newMap = new maplibregl.Map({
+          container: mapContainer.current!,
+          style: TILE_SOURCES[tileSource].style,
+          center: center as [number, number],
+          zoom: zoom,
+        });
 
-    try {
-      clearError();
-      
-      const newMap = new maplibregl.Map({
-        container: mapContainer.current,
-        style: TILE_SOURCES[tileSource].style,
-        center: center as [number, number],
-        zoom: zoom,
-      });
+        // Expose map instance globally for debugging
+        (window as any).map = newMap;
+        console.log('Map instance exposed on window.map');
+
+        // Log zoom level changes
+        newMap.on('zoom', () => {
+          console.log('Current zoom level:', newMap.getZoom().toFixed(2));
+        });
 
       newMap.on('error', (event) => {
-        console.error('Map error event:', event);
         if (event.error?.message) {
           console.error('Map error:', event.error.message);
+          const errorMsg = `Map error: ${event.error.message}`;
+          setError(errorMsg);
+          if (onError) {
+            onError(errorMsg, 'error');
+          }
         }
       });
 
-      newMap.on('data', (e) => {
-        if (e.dataType === 'source' && e.sourceId === 'local-tiles') {
-          console.log('Data event for local-tiles:', e);
-        }
-      });
-
-      newMap.on('sourcedata', (e) => {
-        if (e.sourceId === 'local-tiles') {
-          console.log('Sourcedata event:', e.dataType, 'isSourceLoaded:', e.isSourceLoaded);
-        }
-      });
-
-      newMap.on('style.load', () => {
+      newMap.on('style.load', async () => {
         clearError();
         
         // Add local PMTiles source if using local tiles
         if (tileSource === 'local') {
-          console.log('Adding local-tiles source...');
-          
           if (!newMap.getSource('local-tiles')) {
             newMap.addSource('local-tiles', {
               type: 'vector',
-              url: 'pmtiles://http://localhost:8080/data/tiles.pmtiles',
+              url: `pmtiles://${PMTILES_URL}`,
               attribution: '© OpenStreetMap contributors'
             });
           }
@@ -78,123 +83,122 @@ export function Map({ onError }: MapProps) {
           // Wait for source to be loaded before adding layers
           newMap.on('sourcedata', (e) => {
             if (e.sourceId === 'local-tiles' && e.isSourceLoaded) {
-              console.log('Local tiles source loaded, adding layers...');
-              
-              // Debug: log tile data
-              const source = newMap.getSource('local-tiles');
-              console.log('Source:', source);
-              
-              // Check what features are available
-              setTimeout(() => {
-                // Get a rendered feature to see what layers exist
-                const center = newMap.getCenter();
-                const point = newMap.project(center);
-                const renderedFeatures = newMap.queryRenderedFeatures(point);
-                console.log('Rendered features at center:', renderedFeatures.length);
-                
-                // Get unique source layers from local-tiles
-                const localTileFeatures = renderedFeatures.filter(f => f.source === 'local-tiles');
-                const sourceLayers = [...new Set(localTileFeatures.map(f => f.sourceLayer))];
-                console.log('Source layers from local-tiles:', sourceLayers);
-                
-                if (localTileFeatures.length > 0) {
-                  console.log('Sample local-tiles feature:', localTileFeatures[0]);
-                }
-              }, 1000);
-              
-              // Add cycling-specific layers
-              // Debug: show all roads from local tiles
-              if (!newMap.getLayer('local-roads-debug')) {
-                try {
-                  newMap.addLayer({
-                    id: 'local-roads-debug',
-                    type: 'line',
-                    source: 'local-tiles',
-                    'source-layer': 'roads',
-                    paint: {
-                      'line-color': '#ff0000',
-                      'line-width': 1,
-                      'line-opacity': 0.3
-                    }
-                  });
-                  console.log('Added debug road layer');
-                } catch (err) {
-                  console.error('Error adding debug road layer:', err);
-                }
+              // Add roads layer with zoom-appropriate styling
+              if (!newMap.getLayer('roads-base')) {
+                newMap.addLayer({
+                  id: 'roads-base',
+                  type: 'line',
+                  source: 'local-tiles',
+                  'source-layer': 'transportation',
+                  filter: ['!=', ['get', 'brunnel'], 'tunnel'],
+                  paint: {
+                    'line-color': [
+                      'match',
+                      ['get', 'class'],
+                      'motorway', '#e892a2',
+                      'trunk', '#f9b29c',
+                      'primary', '#fcd6a4',
+                      'secondary', '#f7fabf',
+                      'tertiary', '#ffffff',
+                      'minor', '#ffffff',
+                      'service', '#ffffff',
+                      '#cccccc'
+                    ],
+                    'line-width': [
+                      'interpolate',
+                      ['exponential', 1.5],
+                      ['zoom'],
+                      5, [
+                        'match',
+                        ['get', 'class'],
+                        'motorway', 0.5,
+                        'trunk', 0.4,
+                        0
+                      ],
+                      12, [
+                        'match',
+                        ['get', 'class'],
+                        'motorway', 3,
+                        'trunk', 2.5,
+                        'primary', 2,
+                        'secondary', 1.5,
+                        'tertiary', 1,
+                        0.5
+                      ],
+                      16, [
+                        'match',
+                        ['get', 'class'],
+                        'motorway', 8,
+                        'trunk', 7,
+                        'primary', 6,
+                        'secondary', 5,
+                        'tertiary', 4,
+                        'minor', 3,
+                        2
+                      ]
+                    ]
+                  }
+                });
               }
               
+              // Add cycling infrastructure (custom schema with zoom 5)
               if (!newMap.getLayer('cycleways')) {
-                try {
-                  newMap.addLayer({
-                    id: 'cycleways',
-                    type: 'line',
-                    source: 'local-tiles',
-                    'source-layer': 'roads',
-                    filter: ['all',
-                      ['has', 'highway'],
-                      ['in', ['get', 'highway'], ['literal', ['path', 'cycleway']]]
+                newMap.addLayer({
+                  id: 'cycleways',
+                  type: 'line',
+                  source: 'local-tiles',
+                  'source-layer': 'transportation',
+                  filter: ['in', ['get', 'highway'], ['literal', ['path', 'track', 'cycleway', 'footway', 'steps', 'pedestrian']]],
+                  minzoom: 5,
+                  paint: {
+                    'line-color': '#2fb344',
+                    'line-width': [
+                      'interpolate',
+                      ['exponential', 1.5],
+                      ['zoom'],
+                      5, 1,
+                      8, 1.5,
+                      10, 2,
+                      13, 3,
+                      16, 5,
+                      18, 8
                     ],
-                    paint: {
-                      'line-color': '#2fb344',
-                      'line-width': [
-                        'interpolate',
-                        ['exponential', 1.5],
-                        ['zoom'],
-                        10, 2,
-                        14, 4,
-                        18, 8
-                      ],
-                      'line-opacity': 0.9
-                    }
-                  });
-                  console.log('Added cycleway layer');
-                } catch (err) {
-                  console.error('Error adding cycleway layer:', err);
-                }
+                    'line-opacity': 0.9
+                  }
+                });
+                console.log('Cycleways layer added (minzoom 5 with custom CyclOSM schema)');
               }
               
               if (!newMap.getLayer('poi-points')) {
-                try {
-                  newMap.addLayer({
-                    id: 'poi-points',
-                    type: 'circle',
-                    source: 'local-tiles',
-                    'source-layer': 'poi',
-                    minzoom: 13,
-                    paint: {
-                      'circle-radius': 5,
-                      'circle-color': '#d4a574',
-                      'circle-opacity': 0.6,
-                      'circle-stroke-width': 1,
-                      'circle-stroke-color': '#ffffff'
-                    }
-                  });
-                  console.log('Added POI layer');
-                } catch (err) {
-                  console.error('Error adding POI layer:', err);
-                }
+                newMap.addLayer({
+                  id: 'poi-points',
+                  type: 'circle',
+                  source: 'local-tiles',
+                  'source-layer': 'poi',
+                  minzoom: 14,
+                  paint: {
+                    'circle-radius': 4,
+                    'circle-color': '#d4a574',
+                    'circle-opacity': 0.7,
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#ffffff'
+                  }
+                });
               }
             }
           });
         }
-      });
-
-      setMap(newMap);
-
-      return () => {
-        if (newMap) {
-          newMap.remove();
+      });        setMap(newMap);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Failed to initialize map';
+        console.error('Error initializing map:', error);
+        setError(errorMsg);
+        if (onError) {
+          onError(errorMsg, 'error');
         }
-      };
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to initialize map';
-      console.error('Error initializing map:', error);
-      setError(errorMsg);
-      if (onError) {
-        onError(errorMsg, 'error');
       }
-    }
-  }, [setMap, center, zoom, tileSource, onError, setError, clearError]);
+    };
 
-  return <div ref={mapContainer} className="map-container" />;
+    initializeMap();
+  }, [setMap, center, zoom, tileSource, onError, setError, clearError]);  return <div ref={mapContainer} className="map-container" />;
 }

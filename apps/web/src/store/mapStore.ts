@@ -33,22 +33,15 @@ interface MapState {
 export const useMapStore = create<MapState>((set) => ({
   map: null,
   setMap: (map) => set({ map }),
-  center: [-105.2705, 40.0150], // Colorado center
-  zoom: 8,
-  tileSource: 'public',
+  center: [-93.2, 44.9], // Minneapolis, MN - center of 5-state region
+  zoom: 10, // Lower zoom to ensure we're not at maxzoom
+  tileSource: 'local', // Use local tiles for debugging
   isLoading: false,
   error: null,
   setCenter: (center) => set({ center }),
   setZoom: (zoom) => set({ zoom }),
-  setTileSource: (source) => {
-    console.log('Switching tile source to:', source);
-    console.log('Tile URL:', TILE_SOURCES[source].url);
-    set({ tileSource: source });
-  },
+  setTileSource: (source) => set({ tileSource: source }),
   setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => {
-    console.error('Setting map error:', error);
-    set({ error });
-  },
+  setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
 }));
