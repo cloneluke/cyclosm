@@ -59,6 +59,30 @@ if [ "$1" = "tile-generation" ]; then
             -o /data/sources/nebraska.osm.pbf
     fi
     
+    if [ ! -f /data/sources/north-dakota.osm.pbf ]; then
+        echo "Downloading North Dakota..."
+        curl -L https://download.geofabrik.de/north-america/us/north-dakota-latest.osm.pbf \
+            -o /data/sources/north-dakota.osm.pbf
+    fi
+    
+    if [ ! -f /data/sources/missouri.osm.pbf ]; then
+        echo "Downloading Missouri..."
+        curl -L https://download.geofabrik.de/north-america/us/missouri-latest.osm.pbf \
+            -o /data/sources/missouri.osm.pbf
+    fi
+    
+    if [ ! -f /data/sources/kansas.osm.pbf ]; then
+        echo "Downloading Kansas..."
+        curl -L https://download.geofabrik.de/north-america/us/kansas-latest.osm.pbf \
+            -o /data/sources/kansas.osm.pbf
+    fi
+    
+    if [ ! -f /data/sources/wisconsin.osm.pbf ]; then
+        echo "Downloading Wisconsin..."
+        curl -L https://download.geofabrik.de/north-america/us/wisconsin-latest.osm.pbf \
+            -o /data/sources/wisconsin.osm.pbf
+    fi
+    
     # Merge all state files
     echo "Merging state OSM files..."
     osmium merge /data/sources/colorado.osm.pbf \
@@ -66,6 +90,10 @@ if [ "$1" = "tile-generation" ]; then
                  /data/sources/iowa.osm.pbf \
                  /data/sources/south-dakota.osm.pbf \
                  /data/sources/nebraska.osm.pbf \
+                 /data/sources/north-dakota.osm.pbf \
+                 /data/sources/missouri.osm.pbf \
+                 /data/sources/kansas.osm.pbf \
+                 /data/sources/wisconsin.osm.pbf \
                  --overwrite \
                  -o /data/sources/merged.osm.pbf
     

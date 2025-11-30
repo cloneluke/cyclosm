@@ -70,6 +70,39 @@ layers:
 
       - source: osm
         geometry: line
+        min_zoom: 8
+        include_when:
+          bicycle: [designated, official, yes]
+        attributes:
+          - key: highway
+          - key: name
+          - key: bicycle
+          - key: surface
+
+      - source: osm
+        geometry: line
+        min_zoom: 9
+        include_when:
+          cycleway: [track, lane, share_busway, crossing, opposite_track, opposite_lane]
+        attributes:
+          - key: highway
+          - key: cycleway
+          - key: name
+          - key: surface
+
+      - source: osm
+        geometry: line
+        min_zoom: 0
+        include_when:
+          shoulder: [wide, yes, left, right, both, paved]
+        attributes:
+          - key: highway
+          - key: shoulder
+          - key: name
+          - key: surface
+
+      - source: osm
+        geometry: line
         min_zoom: 12
         include_when:
           highway: [service, living_street]
@@ -123,22 +156,42 @@ layers:
     features:
       - source: osm
         geometry: point
-        min_zoom: 14
+        min_zoom: 12
         include_when:
-          amenity: [bicycle_parking, bicycle_rental, bicycle_repair_station, cafe, restaurant, drinking_water, toilets]
+          amenity: [bicycle_parking, bicycle_rental, bicycle_repair_station]
         attributes:
           - key: amenity
           - key: name
           - key: capacity
             type: integer
+          - key: covered
 
       - source: osm
         geometry: point
         min_zoom: 14
         include_when:
-          shop: bicycle
+          amenity: [cafe, restaurant, drinking_water, toilets, bar, pub, fast_food]
+        attributes:
+          - key: amenity
+          - key: name
+
+      - source: osm
+        geometry: point
+        min_zoom: 13
+        include_when:
+          shop: [bicycle, bike_repair]
         attributes:
           - key: shop
+          - key: name
+          - key: opening_hours
+
+      - source: osm
+        geometry: point
+        min_zoom: 13
+        include_when:
+          leisure: [bike_park, bike_rental]
+        attributes:
+          - key: leisure
           - key: name
 
 
