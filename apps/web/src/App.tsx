@@ -1,13 +1,14 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import type { ToastMessage } from './components/Toast'
-import { Map } from './components/Map'
-import { SourceSelector } from './components/SourceSelector'
-import { LayerToggle } from './components/LayerToggle'
-import { MapControls } from './components/MapControls'
 import { Attribution } from './components/Attribution'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ToastContainer } from './components/Toast'
 import './App.css'
+
+const Map = lazy(() => import('./components/Map').then((mod) => ({ default: mod.Map })))
+const LayerToggle = lazy(() => import('./components/LayerToggle').then((mod) => ({ default: mod.LayerToggle })))
+const SourceSelector = lazy(() => import('./components/SourceSelector').then((mod) => ({ default: mod.SourceSelector })))
+const MapControls = lazy(() => import('./components/MapControls').then((mod) => ({ default: mod.MapControls })))
 
 function App() {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
@@ -25,10 +26,18 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="app">
-        <Map onError={addToast} />
-        <SourceSelector />
-        <LayerToggle />
-        <MapControls />
+        <Suspense fallback={<div className="app-loading">Loading map…</div>}>
+          <Map onError={addToast} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SourceSelector />
+        </Suspense>
+        <Suspense fallback={null}>
+          <LayerToggle />
+        </Suspense>
+        <Suspense fallback={null}>
+          <MapControls />
+        </Suspense>
         <Attribution />
         <ToastContainer toasts={toasts} onRemove={removeToast} />
       </div>

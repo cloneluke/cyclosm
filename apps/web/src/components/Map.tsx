@@ -3,7 +3,14 @@ import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useMapStore, TILE_SOURCES } from '../store/mapStore';
-import { LAYER_CONFIG, CYCLING_TAGS, TOOLTIP_LAYERS } from '../layers.config';
+import {
+  LAYER_CONFIG,
+  CYCLING_TAGS,
+  TOOLTIP_LAYERS,
+  HAS_OVERTURE_SEGMENT_SOURCE,
+  OVERTURE_SEGMENT_PM_TILES_URL,
+  OVERTURE_SEGMENT_SOURCE_ID,
+} from '../layers.config';
 import './Map.css';
 
 // Register PMTiles protocol GLOBALLY before any map initialization
@@ -53,6 +60,14 @@ export function Map({ onError }: MapProps) {
     if (!mapContainer.current) return;
 
     let handlersAdded = false; // Track if handlers are already added
+    let mouseMoveHandler: ((event: maplibregl.MapMouseEvent) => void) | null = null;
+    let mouseOutHandler: ((event: maplibregl.MapMouseEvent) => void) | null = null;
+    let sourceDataHandler: ((event: maplibregl.MapSourceDataEvent) => void) | null = null;
+    let zoomHandler: ((
+      event: maplibregl.MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>
+    ) => void) | null = null;
+    let errorHandler: ((event: maplibregl.ErrorEvent) => void) | null = null;
+    let styleLoadHandler: ((event?: maplibregl.MapLibreEvent) => void) | null = null;
 
     const initializeMap = async () => {
       try {
@@ -65,127 +80,154 @@ export function Map({ onError }: MapProps) {
           zoom: zoom,
         });
 
+        mapRef.current = newMap;
+
         // Expose map instance globally for debugging
         (window as any).map = newMap;
         console.log('Map instance exposed on window.map');
 
         // Log zoom level changes
-        newMap.on('zoom', () => {
+        zoomHandler = (_event) => {
           console.log('Current zoom level:', newMap.getZoom().toFixed(2));
-        });
+        };
+        newMap.on('zoom', zoomHandler);
 
-      newMap.on('error', (event) => {
-        if (event.error?.message) {
-          console.error('Map error:', event.error.message);
-          const errorMsg = `Map error: ${event.error.message}`;
-          setError(errorMsg);
-          if (onError) {
-            onError(errorMsg, 'error');
+        errorHandler = (event) => {
+          if (event.error?.message) {
+            console.error('Map error:', event.error.message);
+            const errorMsg = `Map error: ${event.error.message}`;
+            setError(errorMsg);
+            if (onError) {
+              onError(errorMsg, 'error');
+            }
           }
-        }
-      });
+        };
+        newMap.on('error', errorHandler);
 
-        newMap.on('style.load', async () => {
-        clearError();
-        
-        // Save map reference for layer visibility toggling
-        mapRef.current = newMap;
+        const onStyleLoad = async () => {
+          clearError();
 
-        // Add local PMTiles source if using local tiles
-        if (tileSource === 'local') {
-          if (!newMap.getSource('local-tiles')) {
-            newMap.addSource('local-tiles', {
-              type: 'vector',
-              url: `pmtiles://${PMTILES_URL}`,
-              attribution: '© OpenStreetMap contributors'
-            });
-          }
-          
-          // Wait for source to be loaded before adding layers
-          newMap.on('sourcedata', (e) => {
-            if (e.sourceId === 'local-tiles' && e.isSourceLoaded) {
-              // Add all layers from configuration
-              Object.values(LAYER_CONFIG).forEach((layerConfig) => {
-                if (!newMap.getLayer(layerConfig.id)) {
-                  newMap.addLayer(layerConfig);
-                  console.log(`Layer added: ${layerConfig.id}`);
-                }
-              });
+          // Save map reference for layer visibility toggling
+          mapRef.current = newMap;
 
-              // Add hover tooltip handlers (only once per map initialization)
-              if (handlersAdded) return;
-              handlersAdded = true;
-              
-              console.log('Attaching global tooltip handler');
-              
-              // Use requestAnimationFrame to throttle tooltip updates
-              let pendingTooltipUpdate: number | null = null;
-              let lastMouseEvent: any = null;
-
-              // Global mousemove handler for better reliability
-              newMap.on('mousemove', (e) => {
-                lastMouseEvent = e;
-
-                if (pendingTooltipUpdate === null) {
-                  pendingTooltipUpdate = requestAnimationFrame(() => {
-                    if (!lastMouseEvent) {
-                      pendingTooltipUpdate = null;
-                      return;
-                    }
-
-                    // Query all tooltip layers at once
-                    const features = newMap.queryRenderedFeatures(lastMouseEvent.point, {
-                      layers: TOOLTIP_LAYERS.filter(id => newMap.getLayer(id))
-                    });
-
-                    if (features.length > 0) {
-                      newMap.getCanvas().style.cursor = 'pointer';
-                      
-                      const feature = features[0];
-                      const properties = feature.properties || {};
-                      
-                      // Debug log (throttled)
-                      // console.log('Hover feature:', properties);
-
-                      // Extract cycling-relevant tags using memoized constant
-                      const tags = CYCLING_TAGS
-                        .filter(tag => properties[tag] !== undefined && properties[tag] !== null)
-                        .map(tag => `${tag}: ${properties[tag]}`);
-                      
-                      const content = tags.join('<br/>');
-                      
-                      if (tooltipRef.current && content) {
-                        tooltipRef.current.innerHTML = content;
-                        tooltipRef.current.style.left = lastMouseEvent.point.x + 15 + 'px';
-                        tooltipRef.current.style.top = lastMouseEvent.point.y + 15 + 'px';
-                        tooltipRef.current.style.display = 'block';
-                      }
-                    } else {
-                      newMap.getCanvas().style.cursor = '';
-                      if (tooltipRef.current) {
-                        tooltipRef.current.style.display = 'none';
-                      }
-                    }
-                    
-                    pendingTooltipUpdate = null;
-                  });
-                }
-              });
-
-              // Handle mouse leaving the map canvas
-              newMap.on('mouseout', () => {
-                if (pendingTooltipUpdate !== null) {
-                  cancelAnimationFrame(pendingTooltipUpdate);
-                  pendingTooltipUpdate = null;
-                }
-                if (tooltipRef.current) {
-                  tooltipRef.current.style.display = 'none';
-                }
+          const ensureSources = () => {
+            if (tileSource === 'local' && !newMap.getSource('local-tiles')) {
+              newMap.addSource('local-tiles', {
+                type: 'vector',
+                url: `pmtiles://${PMTILES_URL}`,
+                attribution: '© OpenStreetMap contributors',
               });
             }
-          });
-        }
-      });
+
+            if (
+              HAS_OVERTURE_SEGMENT_SOURCE &&
+              OVERTURE_SEGMENT_PM_TILES_URL &&
+              !newMap.getSource(OVERTURE_SEGMENT_SOURCE_ID)
+            ) {
+              newMap.addSource(OVERTURE_SEGMENT_SOURCE_ID, {
+                type: 'vector',
+                url: `pmtiles://${OVERTURE_SEGMENT_PM_TILES_URL}`,
+                attribution: '© Overture Maps Foundation & contributors',
+              });
+            }
+          };
+
+          const addConfiguredLayers = () => {
+            Object.values(LAYER_CONFIG).forEach((layerConfig) => {
+              if (newMap.getLayer(layerConfig.id)) {
+                return;
+              }
+
+              if (!newMap.getSource(layerConfig.source)) {
+                return;
+              }
+
+              newMap.addLayer(layerConfig);
+              console.log(`Layer added: ${layerConfig.id}`);
+            });
+          };
+
+          ensureSources();
+          addConfiguredLayers();
+
+          if (!sourceDataHandler) {
+            sourceDataHandler = (event) => {
+              if (event.isSourceLoaded) {
+                addConfiguredLayers();
+              }
+            };
+            newMap.on('sourcedata', sourceDataHandler);
+          }
+
+          if (!handlersAdded) {
+            handlersAdded = true;
+            console.log('Attaching global tooltip handler');
+
+            // Use requestAnimationFrame to throttle tooltip updates
+            let pendingTooltipUpdate: number | null = null;
+            let lastMouseEvent: maplibregl.MapMouseEvent | null = null;
+
+            mouseMoveHandler = (e) => {
+              lastMouseEvent = e;
+
+              if (pendingTooltipUpdate === null) {
+                pendingTooltipUpdate = requestAnimationFrame(() => {
+                  if (!lastMouseEvent) {
+                    pendingTooltipUpdate = null;
+                    return;
+                  }
+
+                  const features = newMap.queryRenderedFeatures(lastMouseEvent.point, {
+                    layers: TOOLTIP_LAYERS.filter((id) => newMap.getLayer(id)),
+                  });
+
+                  if (features.length > 0) {
+                    newMap.getCanvas().style.cursor = 'pointer';
+
+                    const feature = features[0];
+                    const properties = feature.properties || {};
+
+                    const tags = CYCLING_TAGS
+                      .filter((tag) => properties[tag] !== undefined && properties[tag] !== null)
+                      .map((tag) => `${tag}: ${properties[tag]}`);
+
+                    const content = tags.join('<br/>');
+
+                    if (tooltipRef.current && content) {
+                      tooltipRef.current.innerHTML = content;
+                      tooltipRef.current.style.left = lastMouseEvent.point.x + 15 + 'px';
+                      tooltipRef.current.style.top = lastMouseEvent.point.y + 15 + 'px';
+                      tooltipRef.current.style.display = 'block';
+                    }
+                  } else {
+                    newMap.getCanvas().style.cursor = '';
+                    if (tooltipRef.current) {
+                      tooltipRef.current.style.display = 'none';
+                    }
+                  }
+
+                  pendingTooltipUpdate = null;
+                });
+              }
+            };
+
+            mouseOutHandler = (_event) => {
+              if (pendingTooltipUpdate !== null) {
+                cancelAnimationFrame(pendingTooltipUpdate);
+                pendingTooltipUpdate = null;
+              }
+              if (tooltipRef.current) {
+                tooltipRef.current.style.display = 'none';
+              }
+            };
+
+            newMap.on('mousemove', mouseMoveHandler);
+            newMap.on('mouseout', mouseOutHandler);
+          }
+        };
+
+        styleLoadHandler = onStyleLoad;
+        newMap.on('style.load', onStyleLoad);
         setMap(newMap);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Failed to initialize map';
@@ -202,23 +244,31 @@ export function Map({ onError }: MapProps) {
     return () => {
       // Cleanup: Remove event listeners and destroy map to prevent memory leaks
       if (mapRef.current) {
-        const map = mapRef.current as any;
-        TOOLTIP_LAYERS.forEach(layerId => {
-          if (map.getLayer(layerId)) {
-            try {
-              map.off('mousemove', layerId);
-              map.off('mouseleave', layerId);
-            } catch (e) {
-              console.warn(`Could not remove listeners for ${layerId}:`, e);
-            }
-          }
-        });
-        map.off('zoom');
-        map.off('error');
-        map.off('style.load');
-        map.off('sourcedata');
+        const map = mapRef.current as maplibregl.Map;
+        if (mouseMoveHandler) {
+          map.off('mousemove', mouseMoveHandler);
+        }
+        if (mouseOutHandler) {
+          map.off('mouseout', mouseOutHandler);
+        }
+        if (sourceDataHandler) {
+          map.off('sourcedata', sourceDataHandler);
+        }
+        if (zoomHandler) {
+          map.off('zoom', zoomHandler);
+        }
+        if (errorHandler) {
+          map.off('error', errorHandler);
+        }
+        if (styleLoadHandler) {
+          map.off('style.load', styleLoadHandler);
+        }
         map.remove();
         mapRef.current = null;
+      }
+
+      if (tooltipRef.current) {
+        tooltipRef.current.style.display = 'none';
       }
     };
   }, [setMap, center, zoom, tileSource, onError, setError, clearError]);

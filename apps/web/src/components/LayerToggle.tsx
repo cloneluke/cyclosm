@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useMapStore } from '../store/mapStore';
+import { HAS_OVERTURE_SEGMENT_SOURCE } from '../layers.config';
 import './LayerToggle.css';
 
 export function LayerToggle() {
@@ -125,6 +126,24 @@ export function LayerToggle() {
     }
   };
 
+  const handleOvertureToggle = () => {
+    const newValue = !getLayerVisibility('overture-cycle');
+    setLayerVisibility('overture-cycle', newValue);
+
+    if (!map) return;
+    try {
+      if (map.getLayer('overture-cycle')) {
+        map.setLayoutProperty(
+          'overture-cycle',
+          'visibility',
+          newValue ? 'visible' : 'none'
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling Overture layer:', error);
+    }
+  };
+
   return (
     <div className="layer-toggle">
       <div className="layer-toggle-group">
@@ -171,6 +190,19 @@ export function LayerToggle() {
           <span className="layer-toggle-text">🏪 Amenities</span>
         </label>
       </div>
+      {HAS_OVERTURE_SEGMENT_SOURCE && (
+        <div className="layer-toggle-group">
+          <label className="layer-toggle-label">
+            <input
+              type="checkbox"
+              checked={getLayerVisibility('overture-cycle')}
+              onChange={handleOvertureToggle}
+              className="layer-toggle-checkbox"
+            />
+            <span className="layer-toggle-text">🛰️ Overture</span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }

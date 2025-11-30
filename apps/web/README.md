@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# CyclOSM Web App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend that renders MapLibre GL vector tiles produced by the CyclOSM Planetiler pipeline.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 18+
+- pnpm 10.24.0 (install via Corepack)
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+corepack enable
+corepack prepare pnpm@10.24.0 --activate
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Install & Run
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+pnpm install            # run from the repo root to hydrate all workspaces
+pnpm --filter web dev   # launch the Vite dev server (http://localhost:5173)
+```
+
+The dev server expects a tile endpoint at `http://localhost:8080/tiles.pmtiles`.
+
+## Building
+
+```
+pnpm run build          # runs tsc + Vite build for this workspace
+```
+
+## Bundle Analysis
+
+```
+cd apps/web
+ANALYZE=true pnpm vite build
+open dist/bundle-report.html
+```
+
+This enables the Rollup visualizer plugin and writes a treemap report (with gzip/brotli sizes) into `dist/`.
+
+## Optional: Overture Cycle Network Overlay
+
+You can stream the Overture Maps “transportation segment” tiles directly as an overlay.
+
+1. Create `apps/web/.env.local`.
+2. Provide the PMTiles URL and source-layer name:
+
+```
+VITE_OVERTURE_SEGMENT_PM_TILES=https://storage.googleapis.com/overturemaps-us-west1/2024-11-15-alpha.0/theme=transportation/type=segment/format=pmtiles/tileset.pmtiles
+VITE_OVERTURE_SEGMENT_LAYER=segment
+```
+
+3. Restart `pnpm dev` so Vite picks up the env vars. A new “Overture” toggle will stream lanes with `modality=bicycle|shared_bicycle` on top of the base map.

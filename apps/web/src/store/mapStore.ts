@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Map } from 'maplibre-gl';
+import { HAS_OVERTURE_SEGMENT_SOURCE } from '../layers.config';
 
 export const TILE_SOURCES = {
   local: {
@@ -15,12 +16,16 @@ export const TILE_SOURCES = {
 } as const;
 
 // Default layer visibility state
-const DEFAULT_LAYER_VISIBILITY = {
+const DEFAULT_LAYER_VISIBILITY: Record<string, boolean> = {
   cycleways: true,
   tracks: true,
   'bicycle-shoulders': false,
   'poi-points': true,
 };
+
+if (HAS_OVERTURE_SEGMENT_SOURCE) {
+  DEFAULT_LAYER_VISIBILITY['overture-cycle'] = false;
+}
 
 // Load layer visibility from localStorage or use defaults
 const loadLayerVisibility = () => {

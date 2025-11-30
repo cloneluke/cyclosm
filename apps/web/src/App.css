@@ -12,6 +12,18 @@
   overflow: hidden;
 }
 
+.app-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 1.25rem;
+  z-index: 10;
+}
+
 @media (max-width: 1024px) {
   .app {
     font-size: 14px;

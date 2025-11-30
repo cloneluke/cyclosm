@@ -3,6 +3,14 @@
  * Centralized definition to avoid repetition and improve maintainability
  */
 
+const OVERTURE_SEGMENT_PM_TILES = import.meta.env.VITE_OVERTURE_SEGMENT_PM_TILES ?? '';
+const OVERTURE_SEGMENT_LAYER = import.meta.env.VITE_OVERTURE_SEGMENT_LAYER ?? 'segment';
+
+export const HAS_OVERTURE_SEGMENT_SOURCE = Boolean(OVERTURE_SEGMENT_PM_TILES);
+export const OVERTURE_SEGMENT_SOURCE_ID = 'overture-segments';
+export const OVERTURE_SEGMENT_PM_TILES_URL = OVERTURE_SEGMENT_PM_TILES;
+export const OVERTURE_SEGMENT_LAYER_NAME = OVERTURE_SEGMENT_LAYER;
+
 export const CYCLING_TAGS = [
   'highway',
   'bicycle',
@@ -17,7 +25,7 @@ export const CYCLING_TAGS = [
   'leisure',
 ] as const;
 
-export const LAYER_CONFIG: Record<string, any> = {
+const baseLayerConfig: Record<string, any> = {
   'roads-base': {
     id: 'roads-base',
     type: 'line',
@@ -210,6 +218,39 @@ export const LAYER_CONFIG: Record<string, any> = {
   } as any,
 };
 
+if (HAS_OVERTURE_SEGMENT_SOURCE) {
+  baseLayerConfig['overture-cycle'] = {
+    id: 'overture-cycle',
+    type: 'line',
+    source: OVERTURE_SEGMENT_SOURCE_ID,
+    'source-layer': OVERTURE_SEGMENT_LAYER,
+    minzoom: 6,
+    filter: [
+      'any',
+      ['==', ['get', 'modality'], 'bicycle'],
+      ['==', ['get', 'modality'], 'shared_bicycle'],
+    ],
+    paint: {
+      'line-color': '#8b5cf6',
+      'line-width': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        6,
+        1.2,
+        12,
+        2.5,
+        16,
+        4,
+      ],
+      'line-opacity': 0.8,
+      'line-dasharray': [1.5, 1.5],
+    },
+  } as any;
+}
+
+export const LAYER_CONFIG = baseLayerConfig;
+
 /**
  * Layer IDs in order (used for event listeners, visibility toggling, cleanup)
  */
@@ -218,4 +259,10 @@ export const LAYER_IDS = Object.keys(LAYER_CONFIG) as Array<keyof typeof LAYER_C
 /**
  * Get layer IDs that should have hover tooltips
  */
-export const TOOLTIP_LAYERS = ['cycleways', 'tracks', 'bicycle-shoulders', 'poi-points', 'roads-base'];
+const baseTooltipLayers = ['cycleways', 'tracks', 'bicycle-shoulders', 'poi-points', 'roads-base'];
+
+if (HAS_OVERTURE_SEGMENT_SOURCE) {
+  baseTooltipLayers.push('overture-cycle');
+}
+
+export const TOOLTIP_LAYERS = baseTooltipLayers;
