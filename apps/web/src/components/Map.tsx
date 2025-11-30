@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -36,15 +36,17 @@ export function Map({ onError }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { setMap, center, zoom, tileSource, setError, clearError } = useMapStore();
+  const mapRef = useRef<maplibregl.Map | null>(null);
 
   const formatFeatureProperties = (properties: Record<string, any>) => {
     // Extract cycling-relevant tags
     const cyclingTags = ['highway', 'bicycle', 'cycleway', 'surface', 'name', 'access', 'foot', 'amenity', 'shop', 'leisure'];
     
-    return cyclingTags
+    let tags = cyclingTags
       .filter(tag => properties[tag] !== undefined && properties[tag] !== null)
-      .map(tag => `${tag}: ${properties[tag]}`)
-      .join('<br/>');
+      .map(tag => `${tag}: ${properties[tag]}`);
+    
+    return tags.join('<br/>');
   };
 
   useEffect(() => {
@@ -81,9 +83,12 @@ export function Map({ onError }: MapProps) {
         }
       });
 
-      newMap.on('style.load', async () => {
+        newMap.on('style.load', async () => {
         clearError();
         
+        // Save map reference for layer visibility toggling
+        mapRef.current = newMap;
+
         // Add local PMTiles source if using local tiles
         if (tileSource === 'local') {
           if (!newMap.getSource('local-tiles')) {
@@ -162,7 +167,7 @@ export function Map({ onError }: MapProps) {
                   type: 'line',
                   source: 'local-tiles',
                   'source-layer': 'transportation',
-                  filter: ['in', ['get', 'highway'], ['literal', ['path', 'track', 'cycleway', 'footway', 'steps', 'pedestrian']]],
+                  filter: ['in', ['get', 'highway'], ['literal', ['path', 'cycleway', 'footway', 'steps', 'pedestrian']]],
                   minzoom: 5,
                   paint: {
                     'line-color': '#2fb344',
@@ -170,17 +175,45 @@ export function Map({ onError }: MapProps) {
                       'interpolate',
                       ['exponential', 1.5],
                       ['zoom'],
-                      5, 1,
-                      8, 1.5,
-                      10, 2,
-                      13, 3,
-                      16, 5,
-                      18, 8
+                      5, 2,
+                      8, 2.5,
+                      10, 3.5,
+                      13, 5,
+                      16, 7,
+                      18, 10
                     ],
                     'line-opacity': 0.9
                   }
                 });
                 console.log('Cycleways layer added (minzoom 5 with custom CyclOSM schema)');
+              }
+
+              // Add tracks layer (brown)
+              if (!newMap.getLayer('tracks')) {
+                newMap.addLayer({
+                  id: 'tracks',
+                  type: 'line',
+                  source: 'local-tiles',
+                  'source-layer': 'transportation',
+                  filter: ['==', ['get', 'highway'], 'track'],
+                  minzoom: 5,
+                  paint: {
+                    'line-color': '#8B6F47',
+                    'line-width': [
+                      'interpolate',
+                      ['exponential', 1.5],
+                      ['zoom'],
+                      5, 2,
+                      8, 2.5,
+                      10, 3.5,
+                      13, 5,
+                      16, 7,
+                      18, 10
+                    ],
+                    'line-opacity': 0.9
+                  }
+                });
+                console.log('Tracks layer added (brown, minzoom 5)');
               }
               
               if (!newMap.getLayer('poi-points')) {
@@ -200,14 +233,49 @@ export function Map({ onError }: MapProps) {
                 });
               }
 
+              // Add bicycle shoulders layer (yellow)
+              if (!newMap.getLayer('bicycle-shoulders')) {
+                newMap.addLayer({
+                  id: 'bicycle-shoulders',
+                  type: 'line',
+                  source: 'local-tiles',
+                  'source-layer': 'transportation',
+                  filter: ['in', ['get', 'shoulder'], ['literal', ['wide', 'yes', 'left', 'right', 'both', 'paved']]],
+                  minzoom: 5,
+                  paint: {
+                    'line-color': '#FFD700',
+                    'line-width': [
+                      'interpolate',
+                      ['exponential', 1.5],
+                      ['zoom'],
+                      5, 1,
+                      8, 1.5,
+                      10, 2,
+                      13, 3.5,
+                      16, 5,
+                      18, 7
+                    ],
+                    'line-opacity': 0.85
+                  }
+                });
+                console.log('Bicycle shoulders layer added (yellow, minzoom 5)');
+              }
+
               // Add hover tooltip handlers
-              ['cycleways', 'poi-points', 'roads-base'].forEach(layerId => {
+              ['cycleways', 'tracks', 'bicycle-shoulders', 'poi-points', 'roads-base'].forEach(layerId => {
                 if (newMap.getLayer(layerId)) {
                   newMap.on('mousemove', layerId, (e) => {
                     if (e.features && e.features.length > 0) {
                       const feature = e.features[0];
                       const properties = feature.properties || {};
-                      const content = formatFeatureProperties(properties);
+                      
+                      // Extract cycling-relevant tags
+                      const cyclingTags = ['highway', 'bicycle', 'cycleway', 'shoulder', 'surface', 'name', 'access', 'foot', 'amenity', 'shop', 'leisure'];
+                      let tags = cyclingTags
+                        .filter(tag => properties[tag] !== undefined && properties[tag] !== null)
+                        .map(tag => `${tag}: ${properties[tag]}`);
+                      
+                      const content = tags.join('<br/>');
                       
                       if (tooltipRef.current && content) {
                         tooltipRef.current.innerHTML = content;

@@ -1,0 +1,168 @@
+[2025-11-29 13:25:53] ==========================================
+[2025-11-29 13:25:53] CyclOSM Tile Refresh Script
+[2025-11-29 13:25:53] ==========================================
+[2025-11-29 13:25:53] Step 1: Removing old OSM source files...
+[2025-11-29 13:25:53] Files to be deleted and re-downloaded:
+[2025-11-29 13:25:59] 
+[2025-11-29 13:25:59] Removing OSM files...
+[2025-11-29 13:25:59] ✓ Old OSM files removed
+[2025-11-29 13:25:59] 
+[2025-11-29 13:25:59] Step 2: Removing old merged file...
+[2025-11-29 13:25:59] ✓ Merged file removed
+[2025-11-29 13:25:59] 
+[2025-11-29 13:25:59] Step 3: Removing old tiles...
+[2025-11-29 13:25:59] ✓ Tiles file removed
+[2025-11-29 13:25:59] 
+[2025-11-29 13:25:59] Step 4: Building Docker image...
+ ---> 0d828879ec45
+Successfully built 0d828879ec45
+Successfully tagged tile-server_planetiler:latest
+[2025-11-29 13:26:26] 
+[2025-11-29 13:26:26] Step 5: Downloading latest OSM data and generating fresh tiles...
+[2025-11-29 13:26:26] This will take several minutes...
+[2025-11-29 13:26:26] 
+[m[0m0:00:57 INF [archive] - 	  read     1x(7% 0.4s wait:5s)
+[m[0m0:00:57 INF [archive] - 	  process 15x(78% 4s)
+[m[0m0:00:57 INF [archive] - 	osm_pass1  9s cpu:1m3s avg:6.7
+[m[0m0:00:57 INF [archive] - 	  read     1x(3% 0.3s wait:9s)
+[m[0m0:00:57 INF [archive] - 	  parse   14x(36% 3s wait:5s)
+[m[0m0:00:57 INF [archive] - 	  process  1x(94% 9s)
+[m[0m0:00:57 INF [archive] - 	osm_pass2  28s cpu:5m29s gc:1s avg:11.6
+[m[0m0:00:57 INF [archive] - 	  read     1x(2% 0.7s wait:21s done:7s)
+[m[0m0:00:57 INF [archive] - 	  process 15x(67% 19s wait:4s)
+[m[0m0:00:57 INF [archive] - 	  write    1x(33% 9s wait:17s)
+[m[0m0:00:57 INF [archive] - 	sort       5s cpu:34s avg:6.3
+[m[0m0:00:57 INF [archive] - 	  worker  1x(66% 4s wait:2s)
+[m[0m0:00:57 INF [archive] - 	archive    8s cpu:1m46s gc:1s avg:12.5
+[m[0m0:00:57 INF [archive] - 	  read    1x(20% 2s wait:4s done:1s)
+[m[0m0:00:57 INF [archive] - 	  encode 15x(65% 6s)
+[m[0m0:00:57 INF [archive] - 	  write   1x(30% 3s wait:3s)
+[m[0m0:00:57 INF [archive] - ----------------------------------------
+[m[0m0:00:57 INF [archive] - 	archive	985MB
+[m[0m0:00:57 INF [archive] - 	features	2.2GB
+[mTile generation complete: /data/tiles.pmtiles
+[2025-11-29 13:30:02] 
+[2025-11-29 13:30:02] Step 6: Restarting tile server...
+[2025-11-29 13:30:15] ✓ Tile server running with new tiles (941M)
+[2025-11-29 13:30:15] 
+[2025-11-29 13:30:15] ==========================================
+[2025-11-29 13:30:15] Tile refresh complete!
+[2025-11-29 13:30:15] ==========================================
+[2025-11-29 13:30:15] 
+[2025-11-29 13:30:15] Next steps:
+[2025-11-29 13:30:15] 1. Go to http://localhost:5173
+[2025-11-29 13:30:15] 2. Hard refresh browser: Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)
+[2025-11-29 13:30:15] 3. Tiles will now show latest OSM data
+[2025-11-29 13:30:15] 
+[2025-11-29 15:15:56] ==========================================
+[2025-11-29 15:15:56] CyclOSM Tile Refresh Script
+[2025-11-29 15:15:56] ==========================================
+[2025-11-29 15:15:56] Step 1: Removing old OSM source files...
+[2025-11-29 15:15:56] Files to be deleted and re-downloaded:
+[2025-11-29 15:16:01] 
+[2025-11-29 15:16:01] Removing OSM files...
+[2025-11-29 15:16:01] ✓ Old OSM files removed
+[2025-11-29 15:16:01] 
+[2025-11-29 15:16:01] Step 2: Removing old merged file...
+[2025-11-29 15:16:01] ✓ Merged file removed
+[2025-11-29 15:16:01] 
+[2025-11-29 15:16:01] Step 3: Removing old tiles...
+[2025-11-29 15:16:01] ✓ Tiles file removed
+[2025-11-29 15:16:01] 
+[2025-11-29 15:16:01] Step 4: Building Docker image...
+ ---> a73d23b39881
+Successfully built a73d23b39881
+Successfully tagged tile-server_planetiler:latest
+[2025-11-29 15:16:26] 
+[2025-11-29 15:16:26] Step 5: Downloading latest OSM data and generating fresh tiles...
+[2025-11-29 15:16:26] This will take several minutes...
+[2025-11-29 15:16:26] 
+[m[0m0:01:00 INF [archive] - 	  read     1x(7% 0.4s wait:5s)
+[m[0m0:01:00 INF [archive] - 	  process 15x(74% 4s)
+[m[0m0:01:00 INF [archive] - 	osm_pass1  10s cpu:1m2s avg:6.2
+[m[0m0:01:00 INF [archive] - 	  read     1x(4% 0.4s wait:10s)
+[m[0m0:01:00 INF [archive] - 	  parse   14x(34% 3s wait:6s)
+[m[0m0:01:00 INF [archive] - 	  process  1x(94% 9s)
+[m[0m0:01:00 INF [archive] - 	osm_pass2  29s cpu:5m18s gc:1s avg:10.9
+[m[0m0:01:00 INF [archive] - 	  read     1x(2% 0.6s wait:21s done:7s)
+[m[0m0:01:00 INF [archive] - 	  process 15x(64% 19s wait:4s)
+[m[0m0:01:00 INF [archive] - 	  write    1x(32% 9s wait:17s)
+[m[0m0:01:00 INF [archive] - 	sort       6s cpu:37s avg:6.5
+[m[0m0:01:00 INF [archive] - 	  worker  1x(63% 4s wait:2s)
+[m[0m0:01:00 INF [archive] - 	archive    9s cpu:1m45s avg:12
+[m[0m0:01:00 INF [archive] - 	  read    1x(19% 2s wait:4s done:2s)
+[m[0m0:01:00 INF [archive] - 	  encode 15x(63% 6s)
+[m[0m0:01:00 INF [archive] - 	  write   1x(29% 3s wait:2s)
+[m[0m0:01:00 INF [archive] - ----------------------------------------
+[m[0m0:01:00 INF [archive] - 	archive	986MB
+[m[0m0:01:00 INF [archive] - 	features	2.2GB
+[mTile generation complete: /data/tiles.pmtiles
+[2025-11-29 15:20:00] 
+[2025-11-29 15:20:00] Step 6: Restarting tile server...
+[2025-11-29 15:20:13] ✓ Tile server running with new tiles (941M)
+[2025-11-29 15:20:13] 
+[2025-11-29 15:20:13] ==========================================
+[2025-11-29 15:20:13] Tile refresh complete!
+[2025-11-29 15:20:13] ==========================================
+[2025-11-29 15:20:13] 
+[2025-11-29 15:20:13] Next steps:
+[2025-11-29 15:20:13] 1. Go to http://localhost:5173
+[2025-11-29 15:20:13] 2. Hard refresh browser: Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)
+[2025-11-29 15:20:13] 3. Tiles will now show latest OSM data
+[2025-11-29 15:20:13] 
+[2025-11-29 15:33:32] ==========================================
+[2025-11-29 15:33:32] CyclOSM Tile Refresh Script
+[2025-11-29 15:33:32] ==========================================
+[2025-11-29 15:33:32] Step 1: Removing old OSM source files...
+[2025-11-29 15:33:32] Files to be deleted and re-downloaded:
+[2025-11-29 15:33:34] 
+[2025-11-29 15:33:34] Removing OSM files...
+[2025-11-29 15:33:35] ✓ Old OSM files removed
+[2025-11-29 15:33:35] 
+[2025-11-29 15:33:35] Step 2: Removing old merged file...
+[2025-11-29 15:33:35] ✓ Merged file removed
+[2025-11-29 15:33:35] 
+[2025-11-29 15:33:35] Step 3: Removing old tiles...
+[2025-11-29 15:33:35] ✓ Tiles file removed
+[2025-11-29 15:33:35] 
+[2025-11-29 15:33:35] Step 4: Building Docker image...
+ ---> 1c175bdeaf35
+Successfully built 1c175bdeaf35
+Successfully tagged tile-server_planetiler:latest
+[2025-11-29 15:34:01] 
+[2025-11-29 15:34:01] Step 5: Downloading latest OSM data and generating fresh tiles...
+[2025-11-29 15:34:01] This will take several minutes...
+[2025-11-29 15:34:01] 
+[m[0m0:00:59 INF [archive] - 	  read     1x(7% 0.4s wait:5s)
+[m[0m0:00:59 INF [archive] - 	  process 15x(79% 4s)
+[m[0m0:00:59 INF [archive] - 	osm_pass1  10s cpu:1m2s avg:6.3
+[m[0m0:00:59 INF [archive] - 	  read     1x(3% 0.3s wait:9s)
+[m[0m0:00:59 INF [archive] - 	  parse   14x(34% 3s wait:6s)
+[m[0m0:00:59 INF [archive] - 	  process  1x(94% 9s)
+[m[0m0:00:59 INF [archive] - 	osm_pass2  29s cpu:5m28s gc:1s avg:11.3
+[m[0m0:00:59 INF [archive] - 	  read     1x(2% 0.7s wait:22s done:7s)
+[m[0m0:00:59 INF [archive] - 	  process 15x(66% 19s wait:4s)
+[m[0m0:00:59 INF [archive] - 	  write    1x(31% 9s wait:18s)
+[m[0m0:00:59 INF [archive] - 	sort       6s cpu:35s avg:6.1
+[m[0m0:00:59 INF [archive] - 	  worker  1x(67% 4s wait:2s)
+[m[0m0:00:59 INF [archive] - 	archive    9s cpu:1m47s gc:1s avg:12
+[m[0m0:00:59 INF [archive] - 	  read    1x(18% 2s wait:4s done:2s)
+[m[0m0:00:59 INF [archive] - 	  encode 15x(63% 6s)
+[m[0m0:00:59 INF [archive] - 	  write   1x(28% 3s wait:3s)
+[m[0m0:00:59 INF [archive] - ----------------------------------------
+[m[0m0:00:59 INF [archive] - 	archive	986MB
+[m[0m0:00:59 INF [archive] - 	features	2.2GB
+[mTile generation complete: /data/tiles.pmtiles
+[2025-11-29 15:37:39] 
+[2025-11-29 15:37:39] Step 6: Restarting tile server...
+[2025-11-29 15:37:51] ✓ Tile server running with new tiles (941M)
+[2025-11-29 15:37:51] 
+[2025-11-29 15:37:51] ==========================================
+[2025-11-29 15:37:51] Tile refresh complete!
+[2025-11-29 15:37:51] ==========================================
+[2025-11-29 15:37:51] 
+[2025-11-29 15:37:51] Next steps:
+[2025-11-29 15:37:51] 1. Go to http://localhost:5173
+[2025-11-29 15:37:51] 2. Hard refresh browser: Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)
+[2025-11-29 15:37:51] 3. Tiles will now show latest OSM data
+[2025-11-29 15:37:51] 
