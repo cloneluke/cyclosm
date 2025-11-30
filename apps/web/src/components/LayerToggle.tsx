@@ -1,44 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useMapStore } from '../store/mapStore';
 import './LayerToggle.css';
 
 export function LayerToggle() {
-  const { map } = useMapStore();
-  const [showCycleways, setShowCycleways] = useState(true);
-  const [showPOI, setShowPOI] = useState(true);
-  const [showTracks, setShowTracks] = useState(true);
-  const [showShoulders, setShowShoulders] = useState(false);
+  const { 
+    map, 
+    layerVisibility, 
+    setLayerVisibility, 
+    getLayerVisibility 
+  } = useMapStore();
 
+  // Sync layer visibility with map when visibility state changes
   useEffect(() => {
     if (!map) return;
 
     const onStyleLoad = () => {
-      // Set initial visibility states
-      try {
-        if (map.getLayer('cycleways')) {
-          map.setLayoutProperty(
-            'cycleways',
-            'visibility',
-            showCycleways ? 'visible' : 'none'
-          );
+      Object.entries(layerVisibility).forEach(([layerId, isVisible]) => {
+        try {
+          if (map.getLayer(layerId)) {
+            map.setLayoutProperty(
+              layerId,
+              'visibility',
+              isVisible ? 'visible' : 'none'
+            );
+          }
+        } catch (error) {
+          console.error(`Error setting visibility for layer ${layerId}:`, error);
         }
-        if (map.getLayer('poi-points')) {
-          map.setLayoutProperty(
-            'poi-points',
-            'visibility',
-            showPOI ? 'visible' : 'none'
-          );
-        }
-        if (map.getLayer('poi-labels')) {
-          map.setLayoutProperty(
-            'poi-labels',
-            'visibility',
-            showPOI ? 'visible' : 'none'
-          );
-        }
-      } catch (error) {
-        console.error('Error setting layer visibility:', error);
-      }
+      });
     };
 
     map.on('style.load', onStyleLoad);
@@ -57,16 +46,18 @@ export function LayerToggle() {
     return () => {
       map.off('style.load', onStyleLoad);
     };
-  }, [map, showCycleways, showPOI]);
+  }, [map, layerVisibility]);
 
   const handleCyclewaysToggle = () => {
-    if (!map) return;
-    const newValue = !showCycleways;
-    setShowCycleways(newValue);
+    const newValue = !getLayerVisibility('cycleways');
+    setLayerVisibility('cycleways', newValue);
+    
     // If turning on cycleways, also turn on tracks
-    if (newValue && !showTracks) {
-      setShowTracks(true);
+    if (newValue && !getLayerVisibility('tracks')) {
+      setLayerVisibility('tracks', true);
     }
+    
+    if (!map) return;
     try {
       if (map.getLayer('cycleways')) {
         map.setLayoutProperty(
@@ -81,20 +72,14 @@ export function LayerToggle() {
   };
 
   const handlePOIToggle = () => {
+    const newValue = !getLayerVisibility('poi-points');
+    setLayerVisibility('poi-points', newValue);
+    
     if (!map) return;
-    const newValue = !showPOI;
-    setShowPOI(newValue);
     try {
       if (map.getLayer('poi-points')) {
         map.setLayoutProperty(
           'poi-points',
-          'visibility',
-          newValue ? 'visible' : 'none'
-        );
-      }
-      if (map.getLayer('poi-labels')) {
-        map.setLayoutProperty(
-          'poi-labels',
           'visibility',
           newValue ? 'visible' : 'none'
         );
@@ -105,9 +90,10 @@ export function LayerToggle() {
   };
 
   const handleTracksToggle = () => {
+    const newValue = !getLayerVisibility('tracks');
+    setLayerVisibility('tracks', newValue);
+    
     if (!map) return;
-    const newValue = !showTracks;
-    setShowTracks(newValue);
     try {
       if (map.getLayer('tracks')) {
         map.setLayoutProperty(
@@ -122,9 +108,10 @@ export function LayerToggle() {
   };
 
   const handleShouldersToggle = () => {
+    const newValue = !getLayerVisibility('bicycle-shoulders');
+    setLayerVisibility('bicycle-shoulders', newValue);
+    
     if (!map) return;
-    const newValue = !showShoulders;
-    setShowShoulders(newValue);
     try {
       if (map.getLayer('bicycle-shoulders')) {
         map.setLayoutProperty(
@@ -144,7 +131,7 @@ export function LayerToggle() {
         <label className="layer-toggle-label">
           <input
             type="checkbox"
-            checked={showCycleways}
+            checked={getLayerVisibility('cycleways')}
             onChange={handleCyclewaysToggle}
             className="layer-toggle-checkbox"
           />
@@ -155,7 +142,7 @@ export function LayerToggle() {
         <label className="layer-toggle-label">
           <input
             type="checkbox"
-            checked={showTracks}
+            checked={getLayerVisibility('tracks')}
             onChange={handleTracksToggle}
             className="layer-toggle-checkbox"
           />
@@ -166,7 +153,7 @@ export function LayerToggle() {
         <label className="layer-toggle-label">
           <input
             type="checkbox"
-            checked={showShoulders}
+            checked={getLayerVisibility('bicycle-shoulders')}
             onChange={handleShouldersToggle}
             className="layer-toggle-checkbox"
           />
@@ -177,7 +164,7 @@ export function LayerToggle() {
         <label className="layer-toggle-label">
           <input
             type="checkbox"
-            checked={showPOI}
+            checked={getLayerVisibility('poi-points')}
             onChange={handlePOIToggle}
             className="layer-toggle-checkbox"
           />

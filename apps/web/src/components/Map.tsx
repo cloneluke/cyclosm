@@ -1,22 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useMapStore, TILE_SOURCES } from '../store/mapStore';
+import { LAYER_CONFIG, CYCLING_TAGS, TOOLTIP_LAYERS } from '../layers.config';
 import './Map.css';
 
 // Register PMTiles protocol GLOBALLY before any map initialization
 const protocol = new Protocol({ metadata: true });
 
+// Cache for TileJSON metadata (to avoid re-fetching on every tile request)
+let tilejsonCache: any = null;
+
 // Wrap protocol.tile to remove bounds from TileJSON (MapLibre 5.x bounds strictness fix)
+// and cache TileJSON to avoid repeated processing
 const originalTile = protocol.tile.bind(protocol);
 const wrappedTile = (params: any, abortController?: any): any => {
+  // Return cached TileJSON if available
+  if (params.type === 'json' && tilejsonCache) {
+    return Promise.resolve({ data: tilejsonCache });
+  }
+
   const result = originalTile(params, abortController);
   if (result instanceof Promise) {
     return result.then((res: any) => {
       if (params.type === 'json' && res.data?.bounds) {
-        // Remove bounds to allow viewing outside strict PMTiles bounds
+        // Remove bounds and cache for future requests
         delete res.data.bounds;
+        tilejsonCache = res.data;
       }
       return res;
     });
@@ -37,17 +48,6 @@ export function Map({ onError }: MapProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { setMap, center, zoom, tileSource, setError, clearError } = useMapStore();
   const mapRef = useRef<maplibregl.Map | null>(null);
-
-  const formatFeatureProperties = (properties: Record<string, any>) => {
-    // Extract cycling-relevant tags
-    const cyclingTags = ['highway', 'bicycle', 'cycleway', 'surface', 'name', 'access', 'foot', 'amenity', 'shop', 'leisure'];
-    
-    let tags = cyclingTags
-      .filter(tag => properties[tag] !== undefined && properties[tag] !== null)
-      .map(tag => `${tag}: ${properties[tag]}`);
-    
-    return tags.join('<br/>');
-  };
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -102,176 +102,26 @@ export function Map({ onError }: MapProps) {
           // Wait for source to be loaded before adding layers
           newMap.on('sourcedata', (e) => {
             if (e.sourceId === 'local-tiles' && e.isSourceLoaded) {
-              // Add roads layer with zoom-appropriate styling
-              if (!newMap.getLayer('roads-base')) {
-                newMap.addLayer({
-                  id: 'roads-base',
-                  type: 'line',
-                  source: 'local-tiles',
-                  'source-layer': 'transportation',
-                  filter: ['!=', ['get', 'brunnel'], 'tunnel'],
-                  paint: {
-                    'line-color': [
-                      'match',
-                      ['get', 'class'],
-                      'motorway', '#e892a2',
-                      'trunk', '#f9b29c',
-                      'primary', '#fcd6a4',
-                      'secondary', '#f7fabf',
-                      'tertiary', '#ffffff',
-                      'minor', '#ffffff',
-                      'service', '#ffffff',
-                      '#cccccc'
-                    ],
-                    'line-width': [
-                      'interpolate',
-                      ['exponential', 1.5],
-                      ['zoom'],
-                      5, [
-                        'match',
-                        ['get', 'class'],
-                        'motorway', 0.5,
-                        'trunk', 0.4,
-                        0
-                      ],
-                      12, [
-                        'match',
-                        ['get', 'class'],
-                        'motorway', 3,
-                        'trunk', 2.5,
-                        'primary', 2,
-                        'secondary', 1.5,
-                        'tertiary', 1,
-                        0.5
-                      ],
-                      16, [
-                        'match',
-                        ['get', 'class'],
-                        'motorway', 8,
-                        'trunk', 7,
-                        'primary', 6,
-                        'secondary', 5,
-                        'tertiary', 4,
-                        'minor', 3,
-                        2
-                      ]
-                    ]
-                  }
-                });
-              }
+              // Add all layers from configuration
+              Object.values(LAYER_CONFIG).forEach((layerConfig) => {
+                if (!newMap.getLayer(layerConfig.id)) {
+                  newMap.addLayer(layerConfig);
+                  console.log(`Layer added: ${layerConfig.id}`);
+                }
+              });
+
+              // Add hover tooltip handlers (only once)
+              if (!newMap.getLayer('cycleways')) return; // If layers aren't loaded, skip
               
-              // Add cycling infrastructure (custom schema with zoom 5)
-              if (!newMap.getLayer('cycleways')) {
-                newMap.addLayer({
-                  id: 'cycleways',
-                  type: 'line',
-                  source: 'local-tiles',
-                  'source-layer': 'transportation',
-                  filter: ['in', ['get', 'highway'], ['literal', ['path', 'cycleway', 'footway', 'steps', 'pedestrian']]],
-                  minzoom: 5,
-                  paint: {
-                    'line-color': '#2fb344',
-                    'line-width': [
-                      'interpolate',
-                      ['exponential', 1.5],
-                      ['zoom'],
-                      5, 2,
-                      8, 2.5,
-                      10, 3.5,
-                      13, 5,
-                      16, 7,
-                      18, 10
-                    ],
-                    'line-opacity': 0.9
-                  }
-                });
-                console.log('Cycleways layer added (minzoom 5 with custom CyclOSM schema)');
-              }
-
-              // Add tracks layer (brown)
-              if (!newMap.getLayer('tracks')) {
-                newMap.addLayer({
-                  id: 'tracks',
-                  type: 'line',
-                  source: 'local-tiles',
-                  'source-layer': 'transportation',
-                  filter: ['==', ['get', 'highway'], 'track'],
-                  minzoom: 5,
-                  paint: {
-                    'line-color': '#8B6F47',
-                    'line-width': [
-                      'interpolate',
-                      ['exponential', 1.5],
-                      ['zoom'],
-                      5, 2,
-                      8, 2.5,
-                      10, 3.5,
-                      13, 5,
-                      16, 7,
-                      18, 10
-                    ],
-                    'line-opacity': 0.9
-                  }
-                });
-                console.log('Tracks layer added (brown, minzoom 5)');
-              }
-              
-              if (!newMap.getLayer('poi-points')) {
-                newMap.addLayer({
-                  id: 'poi-points',
-                  type: 'circle',
-                  source: 'local-tiles',
-                  'source-layer': 'poi',
-                  minzoom: 14,
-                  paint: {
-                    'circle-radius': 4,
-                    'circle-color': '#d4a574',
-                    'circle-opacity': 0.7,
-                    'circle-stroke-width': 1,
-                    'circle-stroke-color': '#ffffff'
-                  }
-                });
-              }
-
-              // Add bicycle shoulders layer (yellow)
-              if (!newMap.getLayer('bicycle-shoulders')) {
-                newMap.addLayer({
-                  id: 'bicycle-shoulders',
-                  type: 'line',
-                  source: 'local-tiles',
-                  'source-layer': 'transportation',
-                  filter: ['in', ['get', 'shoulder'], ['literal', ['wide', 'yes', 'left', 'right', 'both', 'paved']]],
-                  minzoom: 5,
-                  paint: {
-                    'line-color': '#FFD700',
-                    'line-width': [
-                      'interpolate',
-                      ['exponential', 1.5],
-                      ['zoom'],
-                      5, 1,
-                      8, 1.5,
-                      10, 2,
-                      13, 3.5,
-                      16, 5,
-                      18, 7
-                    ],
-                    'line-opacity': 0.85
-                  }
-                });
-                console.log('Bicycle shoulders layer added (yellow, minzoom 5)');
-              }
-
-              // Add hover tooltip handlers
-              ['cycleways', 'tracks', 'bicycle-shoulders', 'poi-points', 'roads-base'].forEach(layerId => {
+              TOOLTIP_LAYERS.forEach(layerId => {
                 if (newMap.getLayer(layerId)) {
-                  newMap.on('mousemove', layerId, (e) => {
+                  (newMap as any).on('mousemove', layerId, (e: any) => {
                     if (e.features && e.features.length > 0) {
                       const feature = e.features[0];
                       const properties = feature.properties || {};
                       
-                      // Extract cycling-relevant tags
-                      const cyclingTags = ['highway', 'bicycle', 'cycleway', 'shoulder', 'surface', 'name', 'access', 'foot', 'amenity', 'shop', 'leisure'];
-                      let tags = cyclingTags
+                      // Extract cycling-relevant tags using memoized constant
+                      const tags = CYCLING_TAGS
                         .filter(tag => properties[tag] !== undefined && properties[tag] !== null)
                         .map(tag => `${tag}: ${properties[tag]}`);
                       
@@ -286,7 +136,7 @@ export function Map({ onError }: MapProps) {
                     }
                   });
 
-                  newMap.on('mouseleave', layerId, () => {
+                  (newMap as any).on('mouseleave', layerId, () => {
                     if (tooltipRef.current) {
                       tooltipRef.current.style.display = 'none';
                     }
@@ -296,7 +146,8 @@ export function Map({ onError }: MapProps) {
             }
           });
         }
-      });        setMap(newMap);
+      });
+        setMap(newMap);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Failed to initialize map';
         console.error('Error initializing map:', error);
@@ -308,6 +159,29 @@ export function Map({ onError }: MapProps) {
     };
 
     initializeMap();
+
+    return () => {
+      // Cleanup: Remove event listeners and destroy map to prevent memory leaks
+      if (mapRef.current) {
+        const map = mapRef.current as any;
+        TOOLTIP_LAYERS.forEach(layerId => {
+          if (map.getLayer(layerId)) {
+            try {
+              map.off('mousemove', layerId);
+              map.off('mouseleave', layerId);
+            } catch (e) {
+              console.warn(`Could not remove listeners for ${layerId}:`, e);
+            }
+          }
+        });
+        map.off('zoom');
+        map.off('error');
+        map.off('style.load');
+        map.off('sourcedata');
+        map.remove();
+        mapRef.current = null;
+      }
+    };
   }, [setMap, center, zoom, tileSource, onError, setError, clearError]);
 
   return (
