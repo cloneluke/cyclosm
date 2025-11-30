@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-noble
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
