@@ -113,16 +113,40 @@ export function Map({ onError }: MapProps) {
               });
 
               // Add hover tooltip handlers (only once per map initialization)
-              if (handlersAdded || !newMap.getLayer('cycleways')) return;
+              if (handlersAdded) return;
               handlersAdded = true;
               
-              TOOLTIP_LAYERS.forEach(layerId => {
-                if (newMap.getLayer(layerId)) {
-                  (newMap as any).on('mousemove', layerId, (e: any) => {
-                    if (e.features && e.features.length > 0) {
-                      const feature = e.features[0];
+              console.log('Attaching global tooltip handler');
+              
+              // Use requestAnimationFrame to throttle tooltip updates
+              let pendingTooltipUpdate: number | null = null;
+              let lastMouseEvent: any = null;
+
+              // Global mousemove handler for better reliability
+              newMap.on('mousemove', (e) => {
+                lastMouseEvent = e;
+
+                if (pendingTooltipUpdate === null) {
+                  pendingTooltipUpdate = requestAnimationFrame(() => {
+                    if (!lastMouseEvent) {
+                      pendingTooltipUpdate = null;
+                      return;
+                    }
+
+                    // Query all tooltip layers at once
+                    const features = newMap.queryRenderedFeatures(lastMouseEvent.point, {
+                      layers: TOOLTIP_LAYERS.filter(id => newMap.getLayer(id))
+                    });
+
+                    if (features.length > 0) {
+                      newMap.getCanvas().style.cursor = 'pointer';
+                      
+                      const feature = features[0];
                       const properties = feature.properties || {};
                       
+                      // Debug log (throttled)
+                      // console.log('Hover feature:', properties);
+
                       // Extract cycling-relevant tags using memoized constant
                       const tags = CYCLING_TAGS
                         .filter(tag => properties[tag] !== undefined && properties[tag] !== null)
@@ -132,18 +156,30 @@ export function Map({ onError }: MapProps) {
                       
                       if (tooltipRef.current && content) {
                         tooltipRef.current.innerHTML = content;
-                        tooltipRef.current.style.left = e.originalEvent.pageX + 10 + 'px';
-                        tooltipRef.current.style.top = e.originalEvent.pageY + 10 + 'px';
+                        tooltipRef.current.style.left = lastMouseEvent.point.x + 15 + 'px';
+                        tooltipRef.current.style.top = lastMouseEvent.point.y + 15 + 'px';
                         tooltipRef.current.style.display = 'block';
                       }
+                    } else {
+                      newMap.getCanvas().style.cursor = '';
+                      if (tooltipRef.current) {
+                        tooltipRef.current.style.display = 'none';
+                      }
                     }
+                    
+                    pendingTooltipUpdate = null;
                   });
+                }
+              });
 
-                  (newMap as any).on('mouseleave', layerId, () => {
-                    if (tooltipRef.current) {
-                      tooltipRef.current.style.display = 'none';
-                    }
-                  });
+              // Handle mouse leaving the map canvas
+              newMap.on('mouseout', () => {
+                if (pendingTooltipUpdate !== null) {
+                  cancelAnimationFrame(pendingTooltipUpdate);
+                  pendingTooltipUpdate = null;
+                }
+                if (tooltipRef.current) {
+                  tooltipRef.current.style.display = 'none';
                 }
               });
             }
@@ -194,7 +230,7 @@ export function Map({ onError }: MapProps) {
         className="cycling-tooltip"
         style={{
           display: 'none',
-          position: 'fixed',
+          position: 'absolute',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           color: '#fff',
           padding: '8px 12px',
