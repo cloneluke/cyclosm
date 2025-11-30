@@ -52,6 +52,8 @@ export function Map({ onError }: MapProps) {
   useEffect(() => {
     if (!mapContainer.current) return;
 
+    let handlersAdded = false; // Track if handlers are already added
+
     const initializeMap = async () => {
       try {
         clearError();
@@ -110,8 +112,9 @@ export function Map({ onError }: MapProps) {
                 }
               });
 
-              // Add hover tooltip handlers (only once)
-              if (!newMap.getLayer('cycleways')) return; // If layers aren't loaded, skip
+              // Add hover tooltip handlers (only once per map initialization)
+              if (handlersAdded || !newMap.getLayer('cycleways')) return;
+              handlersAdded = true;
               
               TOOLTIP_LAYERS.forEach(layerId => {
                 if (newMap.getLayer(layerId)) {
