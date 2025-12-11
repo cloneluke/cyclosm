@@ -294,8 +294,9 @@ export function Map({ onError }: MapProps) {
 
     const map = mapRef.current;
     const overtureLayerConfig = LAYER_CONFIG['overture-cycle'];
+    const overtureCyclewaysConfig = LAYER_CONFIG['overture-cycleways'];
 
-    if (!overtureLayerConfig) {
+    if (!overtureLayerConfig || !overtureCyclewaysConfig) {
       return;
     }
 
@@ -311,12 +312,22 @@ export function Map({ onError }: MapProps) {
             });
           }
 
+          // Add overture-cycle layer
           if (!map.getLayer(overtureLayerConfig.id)) {
             map.addLayer(overtureLayerConfig);
             console.log('Overture layer added');
           } else {
             map.setLayoutProperty(overtureLayerConfig.id, 'visibility', 'visible');
             console.log('Overture layer made visible');
+          }
+
+          // Add overture-cycleways layer
+          if (!map.getLayer(overtureCyclewaysConfig.id)) {
+            map.addLayer(overtureCyclewaysConfig);
+            console.log('Overture cycleways layer added');
+          } else {
+            map.setLayoutProperty(overtureCyclewaysConfig.id, 'visibility', 'visible');
+            console.log('Overture cycleways layer made visible');
           }
         } catch (error) {
           console.error('Error adding Overture layer:', error);
@@ -326,6 +337,10 @@ export function Map({ onError }: MapProps) {
           if (map.getLayer(overtureLayerConfig.id)) {
             map.removeLayer(overtureLayerConfig.id);
             console.log('Overture layer removed');
+          }
+          if (map.getLayer(overtureCyclewaysConfig.id)) {
+            map.removeLayer(overtureCyclewaysConfig.id);
+            console.log('Overture cycleways layer removed');
           }
           if (map.getSource(OVERTURE_SEGMENT_SOURCE_ID)) {
             map.removeSource(OVERTURE_SEGMENT_SOURCE_ID);

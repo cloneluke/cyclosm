@@ -224,6 +224,7 @@ if (HAS_OVERTURE_SEGMENT_SOURCE) {
     type: 'line',
     source: OVERTURE_SEGMENT_SOURCE_ID,
     'source-layer': OVERTURE_SEGMENT_LAYER,
+    minzoom: 0,
     // Visible at all zoom levels
     paint: {
       'line-color': '#FF1744',
@@ -232,7 +233,7 @@ if (HAS_OVERTURE_SEGMENT_SOURCE) {
         ['linear'],
         ['zoom'],
         0,
-        0.5,
+        1,
         6,
         2,
         12,
@@ -241,6 +242,37 @@ if (HAS_OVERTURE_SEGMENT_SOURCE) {
         5,
       ],
       'line-opacity': 0.9,
+    },
+  } as any;
+
+  baseLayerConfig['overture-cycleways'] = {
+    id: 'overture-cycleways',
+    type: 'line',
+    source: OVERTURE_SEGMENT_SOURCE_ID,
+    'source-layer': OVERTURE_SEGMENT_LAYER,
+    minzoom: 0,
+    filter: [
+      'any',
+      ['==', ['get', 'class'], 'cycleway'],
+      ['==', ['get', 'class'], 'path'],
+    ],
+    // Visible at all zoom levels
+    paint: {
+      'line-color': '#9C27B0',
+      'line-width': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        0,
+        1.2,
+        6,
+        2.5,
+        12,
+        4,
+        16,
+        6,
+      ],
+      'line-opacity': 0.95,
     },
   } as any;
 }

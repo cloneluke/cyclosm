@@ -144,6 +144,24 @@ export function LayerToggle() {
     }
   };
 
+  const handleOvertureCyclewaysToggle = () => {
+    const newValue = !getLayerVisibility('overture-cycleways');
+    setLayerVisibility('overture-cycleways', newValue);
+
+    if (!map) return;
+    try {
+      if (map.getLayer('overture-cycleways')) {
+        map.setLayoutProperty(
+          'overture-cycleways',
+          'visibility',
+          newValue ? 'visible' : 'none'
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling Overture cycleways layer:', error);
+    }
+  };
+
   return (
     <div className="layer-toggle">
       <div className="layer-toggle-group">
@@ -191,17 +209,30 @@ export function LayerToggle() {
         </label>
       </div>
       {HAS_OVERTURE_SEGMENT_SOURCE && (
-        <div className="layer-toggle-group">
-          <label className="layer-toggle-label">
-            <input
-              type="checkbox"
-              checked={getLayerVisibility('overture-cycle')}
-              onChange={handleOvertureToggle}
-              className="layer-toggle-checkbox"
-            />
-            <span className="layer-toggle-text">🛰️ Overture</span>
-          </label>
-        </div>
+        <>
+          <div className="layer-toggle-group">
+            <label className="layer-toggle-label">
+              <input
+                type="checkbox"
+                checked={getLayerVisibility('overture-cycle')}
+                onChange={handleOvertureToggle}
+                className="layer-toggle-checkbox"
+              />
+              <span className="layer-toggle-text">🛰️ Overture</span>
+            </label>
+          </div>
+          <div className="layer-toggle-group" style={{ marginLeft: '20px' }}>
+            <label className="layer-toggle-label">
+              <input
+                type="checkbox"
+                checked={getLayerVisibility('overture-cycleways')}
+                onChange={handleOvertureCyclewaysToggle}
+                className="layer-toggle-checkbox"
+              />
+              <span className="layer-toggle-text">🚴 Cycleways</span>
+            </label>
+          </div>
+        </>
       )}
     </div>
   );
