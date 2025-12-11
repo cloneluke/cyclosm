@@ -37,16 +37,16 @@ open dist/bundle-report.html
 
 This enables the Rollup visualizer plugin and writes a treemap report (with gzip/brotli sizes) into `dist/`.
 
-## Optional: Overture Cycle Network Overlay
+## Optional: Overture Transportation Overlay
 
-You can stream the Overture Maps “transportation segment” tiles directly as an overlay.
+You can stream the Overture Maps "transportation" tiles directly as an overlay.
 
-1. Create `apps/web/.env.local`.
-2. Provide the PMTiles URL and source-layer name:
+1. Create `apps/web/.env.local` (if it doesn't exist).
+2. Provide the official Overture PMTiles URL and source-layer name:
 
 ```
-VITE_OVERTURE_SEGMENT_PM_TILES=https://storage.googleapis.com/overturemaps-us-west1/2024-11-15-alpha.0/theme=transportation/type=segment/format=pmtiles/tileset.pmtiles
+VITE_OVERTURE_SEGMENT_PM_TILES=https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/2025-11-19/transportation.pmtiles
 VITE_OVERTURE_SEGMENT_LAYER=segment
 ```
 
-3. Restart `pnpm dev` so Vite picks up the env vars. A new “Overture” toggle will stream lanes with `modality=bicycle|shared_bicycle` on top of the base map.
+3. Restart `pnpm dev` so Vite picks up the env vars. A new "Overture" toggle will appear in the layer controls to toggle the transportation network overlay on top of the base map.

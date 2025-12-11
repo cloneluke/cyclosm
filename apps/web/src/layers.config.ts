@@ -4,7 +4,7 @@
  */
 
 const OVERTURE_SEGMENT_PM_TILES = import.meta.env.VITE_OVERTURE_SEGMENT_PM_TILES ?? '';
-const OVERTURE_SEGMENT_LAYER = import.meta.env.VITE_OVERTURE_SEGMENT_LAYER ?? 'segment';
+const OVERTURE_SEGMENT_LAYER = import.meta.env.VITE_OVERTURE_SEGMENT_LAYER ?? 'transportation_segment';
 
 export const HAS_OVERTURE_SEGMENT_SOURCE = Boolean(OVERTURE_SEGMENT_PM_TILES);
 export const OVERTURE_SEGMENT_SOURCE_ID = 'overture-segments';
@@ -224,27 +224,23 @@ if (HAS_OVERTURE_SEGMENT_SOURCE) {
     type: 'line',
     source: OVERTURE_SEGMENT_SOURCE_ID,
     'source-layer': OVERTURE_SEGMENT_LAYER,
-    minzoom: 6,
-    filter: [
-      'any',
-      ['==', ['get', 'modality'], 'bicycle'],
-      ['==', ['get', 'modality'], 'shared_bicycle'],
-    ],
+    // Visible at all zoom levels
     paint: {
-      'line-color': '#8b5cf6',
+      'line-color': '#FF1744',
       'line-width': [
         'interpolate',
         ['linear'],
         ['zoom'],
+        0,
+        0.5,
         6,
-        1.2,
+        2,
         12,
-        2.5,
+        3,
         16,
-        4,
+        5,
       ],
-      'line-opacity': 0.8,
-      'line-dasharray': [1.5, 1.5],
+      'line-opacity': 0.9,
     },
   } as any;
 }

@@ -54,6 +54,9 @@ export function Map({ onError }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { setMap, center, zoom, tileSource, setError, clearError } = useMapStore();
+  const overtureEnabled = useMapStore(
+    (state) => state.layerVisibility['overture-cycle'] ?? false
+  );
   const mapRef = useRef<maplibregl.Map | null>(null);
 
   useEffect(() => {
@@ -105,6 +108,8 @@ export function Map({ onError }: MapProps) {
         newMap.on('error', errorHandler);
 
         const onStyleLoad = async () => {
+          const isOvertureEnabled =
+            useMapStore.getState().layerVisibility['overture-cycle'] ?? false;
           clearError();
 
           // Save map reference for layer visibility toggling
@@ -120,6 +125,7 @@ export function Map({ onError }: MapProps) {
             }
 
             if (
+              isOvertureEnabled &&
               HAS_OVERTURE_SEGMENT_SOURCE &&
               OVERTURE_SEGMENT_PM_TILES_URL &&
               !newMap.getSource(OVERTURE_SEGMENT_SOURCE_ID)
@@ -134,6 +140,10 @@ export function Map({ onError }: MapProps) {
 
           const addConfiguredLayers = () => {
             Object.values(LAYER_CONFIG).forEach((layerConfig) => {
+              if (layerConfig.id === 'overture-cycle' && !isOvertureEnabled) {
+                return;
+              }
+
               if (newMap.getLayer(layerConfig.id)) {
                 return;
               }
@@ -272,6 +282,70 @@ export function Map({ onError }: MapProps) {
       }
     };
   }, [setMap, center, zoom, tileSource, onError, setError, clearError]);
+
+  useEffect(() => {
+    if (
+      !HAS_OVERTURE_SEGMENT_SOURCE ||
+      !OVERTURE_SEGMENT_PM_TILES_URL ||
+      !mapRef.current
+    ) {
+      return;
+    }
+
+    const map = mapRef.current;
+    const overtureLayerConfig = LAYER_CONFIG['overture-cycle'];
+
+    if (!overtureLayerConfig) {
+      return;
+    }
+
+    // Ensure style is loaded before trying to add/remove layers
+    const handleOvertureToggle = () => {
+      if (overtureEnabled) {
+        try {
+          if (!map.getSource(OVERTURE_SEGMENT_SOURCE_ID)) {
+            map.addSource(OVERTURE_SEGMENT_SOURCE_ID, {
+              type: 'vector',
+              url: `pmtiles://${OVERTURE_SEGMENT_PM_TILES_URL}`,
+              attribution: '© Overture Maps Foundation & contributors',
+            });
+          }
+
+          if (!map.getLayer(overtureLayerConfig.id)) {
+            map.addLayer(overtureLayerConfig);
+            console.log('Overture layer added');
+          } else {
+            map.setLayoutProperty(overtureLayerConfig.id, 'visibility', 'visible');
+            console.log('Overture layer made visible');
+          }
+        } catch (error) {
+          console.error('Error adding Overture layer:', error);
+        }
+      } else {
+        try {
+          if (map.getLayer(overtureLayerConfig.id)) {
+            map.removeLayer(overtureLayerConfig.id);
+            console.log('Overture layer removed');
+          }
+          if (map.getSource(OVERTURE_SEGMENT_SOURCE_ID)) {
+            map.removeSource(OVERTURE_SEGMENT_SOURCE_ID);
+          }
+        } catch (error) {
+          console.error('Error removing Overture layer:', error);
+        }
+      }
+    };
+
+    // Only run after style is loaded
+    if (map.isStyleLoaded()) {
+      handleOvertureToggle();
+    } else {
+      map.on('style.load', handleOvertureToggle);
+      return () => {
+        map.off('style.load', handleOvertureToggle);
+      };
+    }
+  }, [overtureEnabled]);
 
   return (
     <div ref={mapContainer} className="map-container">
