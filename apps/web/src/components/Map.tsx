@@ -44,7 +44,7 @@ const wrappedTile = (params: any, abortController?: any): any => {
 
 maplibregl.addProtocol('pmtiles', wrappedTile as any);
 
-const PMTILES_URL = 'http://localhost:8080/tiles.pmtiles';
+const PMTILES_URL = `http://localhost:8080/tiles.pmtiles?v=${Date.now()}`;
 
 interface MapProps {
   onError?: (message: string, type: 'error' | 'success' | 'info' | 'warning') => void;
@@ -154,6 +154,17 @@ export function Map({ onError }: MapProps) {
 
               newMap.addLayer(layerConfig);
               console.log(`Layer added: ${layerConfig.id}`);
+              
+              // Apply initial visibility from store
+              const layerVisibility = useMapStore.getState().layerVisibility[layerConfig.id];
+              if (layerVisibility !== undefined) {
+                newMap.setLayoutProperty(
+                  layerConfig.id,
+                  'visibility',
+                  layerVisibility ? 'visible' : 'none'
+                );
+                console.log(`Layer ${layerConfig.id} initial visibility: ${layerVisibility ? 'visible' : 'none'}`);
+              }
             });
           };
 

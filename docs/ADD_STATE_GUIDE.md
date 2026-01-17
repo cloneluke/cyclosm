@@ -1,6 +1,12 @@
 # Adding States to CyclOSM Tile Coverage
 
-This guide documents the process used to successfully add North Dakota and Missouri to the cycling map tile coverage.
+This guide documents the process for adding new states to the cycling map tile coverage. It has been successfully used to add 10 states including Tennessee, which required solving the **duplicate node ID problem at state boundaries**.
+
+## Key Discovery: Handling State Boundary Duplicates
+
+When merging OSM data from multiple states, the files share identical node IDs at their shared borders. Planetiler cannot process this unsorted data and throws an error. **The solution is to re-encode the merged file with osmconvert**, which normalizes the data structure and eliminates duplicates.
+
+This was the blocker that prevented Tennessee from being added in previous attempts. Once osmconvert deduplication was added to the pipeline, all states merged successfully.
 
 ## Overview
 
@@ -41,20 +47,52 @@ fi
 Find the osmium merge command in `entrypoint.sh` and add your state to the list:
 
 ```bash
-osmium merge /data/sources/colorado.osm.pbf \
+osmium merge -o /data/sources/merged.osm.pbf --overwrite \
+             /data/sources/colorado.osm.pbf \
              /data/sources/minnesota.osm.pbf \
              /data/sources/iowa.osm.pbf \
              /data/sources/south-dakota.osm.pbf \
              /data/sources/nebraska.osm.pbf \
              /data/sources/north-dakota.osm.pbf \
              /data/sources/missouri.osm.pbf \
-             --overwrite \
-             -o /data/sources/merged.osm.pbf
+             /data/sources/kansas.osm.pbf \
+             /data/sources/wisconsin.osm.pbf \
+             /data/sources/tennessee.osm.pbf
+
+# CRITICAL: Clean duplicate node IDs at state boundaries
+echo "Cleaning duplicate nodes with osmconvert..."
+osmconvert /data/sources/merged.osm.pbf -o=/data/sources/merged_clean.pbf
+mv /data/sources/merged_clean.pbf /data/sources/merged.osm.pbf
 ```
 
-**Important:** Order doesn't matter, but keep them organized (alphabetical or geographic).
+**Important:** 
+- Order doesn't matter, but keep them organized (alphabetical or geographic)
+- **Always add the osmconvert deduplication step** after merge (see below)
 
-**File to modify:** `infrastructure/tile-server/entrypoint.sh` (around line 76)
+#### Why osmconvert deduplication is essential
+
+When merging multiple states, the OSM data at state boundaries contains **identical node IDs** where states share borders. This causes Planetiler to fail with:
+```
+IllegalArgumentException: Nodes must be sorted ascending by ID, XXXXX came after XXXXX
+```
+
+The solution is to re-encode the merged file with `osmconvert`, which normalizes the data and eliminates duplicate node IDs:
+
+```bash
+# This step is mandatory when merging 2+ states
+osmconvert /data/sources/merged.osm.pbf -o=/data/sources/merged_clean.pbf
+mv /data/sources/merged_clean.pbf /data/sources/merged.osm.pbf
+```
+
+**What osmconvert does:**
+- Re-encodes the PBF file to internal format
+- Normalizes node IDs and element ordering
+- Removes duplicates at boundaries
+- Preserves all feature data
+
+**Performance:** Takes ~30-60 seconds for 10 states
+
+**File to modify:** `infrastructure/tile-server/entrypoint.sh` (around line 100-120)
 
 ### 3. Update Schema (if adding cycling features)
 
@@ -137,25 +175,44 @@ Content-Length should match the new file size.
 2. **Hard refresh:** `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac)
 3. Zoom to the new state and verify cycling features appear
 
-## What Was Added for North Dakota and Missouri
+## What Was Added: 10-State Coverage
 
-### North Dakota (Commit c076901)
-- **File size:** 119.8 MB OSM data
-- **Features:** Existing cycling infrastructure already mapped well in OSM
-- **Changes:** Only added download + merge to `entrypoint.sh`
-- **Result:** Cycling features appear from zoom 5+
+### Recent Addition: Tennessee
+- **File size:** 165 MB OSM data
+- **Key challenge:** State boundary duplicate node IDs blocked tile generation
+- **Solution:** Added osmconvert deduplication step to merge pipeline
+- **Result:** Successfully merged with other 9 states, cycling features visible from zoom 5+
 
-### Missouri (Commit d1fab8b + schema expansion)
-- **File size:** 173.4 MB OSM data
-- **Initial issue:** No cycling features visible despite merge working
-- **Root cause:** Missouri's cycling features are tagged differently in OSM
-- **Solution:** Expanded schema to detect:
-  - `bicycle=designated/official/yes` tags (bikes allowed on roads)
-  - `cycleway=track/lane` tags (bike infrastructure on roads)
-  - Additional POI amenities at lower zoom levels
-- **Result:** Cycling features now visible from zoom 8+
+### Previous Additions (North Dakota, Missouri, etc.)
+- **North Dakota:** 119.8 MB - cycling infrastructure already well mapped
+- **Missouri:** 173.4 MB - required schema expansion for cycling feature detection
+- **Kansas, Wisconsin, Iowa, South Dakota, Nebraska, Colorado:** Similar patterns
+
+### All 10 States Now Covered
+```
+Colorado (CO)      Minnesota (MN)     Iowa (IA)
+South Dakota (SD)  Nebraska (NE)      North Dakota (ND)
+Missouri (MO)      Kansas (KS)        Wisconsin (WI)
+Tennessee (TN)     ← Most recently added
+```
+
+**Total coverage:** 1.1 GB PMTiles file with 36M+ features across all zoom levels
 
 ## Common Pitfalls
+
+### Issue: "Nodes must be sorted ascending by ID" error
+**Cause:** You added a state to the merge command but forgot the osmconvert deduplication step
+```
+java.lang.IllegalArgumentException: Nodes must be sorted ascending by ID, XXXXX came after XXXXX
+```
+
+**Solution:** Ensure you have this block after the `osmium merge` command:
+```bash
+osmconvert /data/sources/merged.osm.pbf -o=/data/sources/merged_clean.pbf
+mv /data/sources/merged_clean.pbf /data/sources/merged.osm.pbf
+```
+
+This re-encodes the file and removes duplicate node IDs at state boundaries. **Do not skip this step when merging multiple states.**
 
 ### Issue: Tiles don't change size after adding state
 **Solution:** You probably forgot to rebuild the Docker image if you modified the schema. Run:
@@ -194,11 +251,12 @@ docker-compose up -d
 
 ## Performance Metrics
 
-- **Per state:** ~40-50 seconds generation time
-- **Total states added:** 7 (CO, MN, IA, SD, NE, ND, MO)
-- **Total tile file:** 755 MB
-- **Total features:** 1.7 GB uncompressed
-- **Merge file:** 1005 MB (before compression)
+- **Per state:** ~8-15 seconds generation time
+- **Total states:** 10 (CO, MN, IA, SD, NE, ND, MO, KS, WI, TN)
+- **Total tile file:** 1.1 GB
+- **Total features:** 2.5 GB uncompressed
+- **Merge file:** 1.2 GB (before osmconvert cleaning)
+- **Total generation time:** ~1m 37s (download + merge + osmconvert + Planetiler)
 
 ## Git Workflow
 

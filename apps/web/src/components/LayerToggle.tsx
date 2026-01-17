@@ -162,6 +162,35 @@ export function LayerToggle() {
     }
   };
 
+  const handleBicycleNoToggle = () => {
+    const newValue = !getLayerVisibility('bicycle-no');
+    setLayerVisibility('bicycle-no', newValue);
+    console.log(`🚫 Toggling bicycle-no layer to: ${newValue ? 'visible' : 'none'}`);
+    if (!map) return;
+    try {
+      if (map.getLayer('bicycle-no')) {
+        map.setLayoutProperty(
+          'bicycle-no',
+          'visibility',
+          newValue ? 'visible' : 'none'
+        );
+        // Query features to verify data is in tiles
+        const features = map.querySourceFeatures('local-tiles', {
+          sourceLayer: 'transportation',
+          filter: ['==', ['get', 'bicycle'], 'no']
+        });
+        console.log(`Found ${features.length} bicycle=no features in tiles`);
+        if (features.length > 0) {
+          console.log('Sample feature:', features[0].properties);
+        }
+      } else {
+        console.warn('bicycle-no layer not found on map');
+      }
+    } catch (error) {
+      console.error('Error toggling bicycle=no:', error);
+    }
+  };
+
   return (
     <div className="layer-toggle">
       <div className="layer-toggle-group">
@@ -201,39 +230,13 @@ export function LayerToggle() {
         <label className="layer-toggle-label">
           <input
             type="checkbox"
-            checked={getLayerVisibility('poi-points')}
-            onChange={handlePOIToggle}
+            checked={getLayerVisibility('bicycle-no')}
+            onChange={handleBicycleNoToggle}
             className="layer-toggle-checkbox"
           />
-          <span className="layer-toggle-text">🏪 Amenities</span>
+          <span className="layer-toggle-text">🚫 No Bicycles</span>
         </label>
       </div>
-      {HAS_OVERTURE_SEGMENT_SOURCE && (
-        <>
-          <div className="layer-toggle-group">
-            <label className="layer-toggle-label">
-              <input
-                type="checkbox"
-                checked={getLayerVisibility('overture-cycle')}
-                onChange={handleOvertureToggle}
-                className="layer-toggle-checkbox"
-              />
-              <span className="layer-toggle-text">🛰️ Overture</span>
-            </label>
-          </div>
-          <div className="layer-toggle-group" style={{ marginLeft: '20px' }}>
-            <label className="layer-toggle-label">
-              <input
-                type="checkbox"
-                checked={getLayerVisibility('overture-cycleways')}
-                onChange={handleOvertureCyclewaysToggle}
-                className="layer-toggle-checkbox"
-              />
-              <span className="layer-toggle-text">🚴 Cycleways</span>
-            </label>
-          </div>
-        </>
-      )}
     </div>
   );
 }

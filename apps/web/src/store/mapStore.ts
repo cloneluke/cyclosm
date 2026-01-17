@@ -20,6 +20,7 @@ const DEFAULT_LAYER_VISIBILITY: Record<string, boolean> = {
   cycleways: true,
   tracks: true,
   'bicycle-shoulders': false,
+  'bicycle-no': false,
   'poi-points': true,
 };
 

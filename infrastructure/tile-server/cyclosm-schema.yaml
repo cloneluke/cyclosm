@@ -70,6 +70,19 @@ layers:
 
       - source: osm
         geometry: line
+        min_zoom: 10
+        include_when:
+          bicycle: [no]
+        attributes:
+          - key: highway
+          - key: name
+          - key: bicycle
+          - key: surface
+          - key: foot
+          - key: access
+
+      - source: osm
+        geometry: line
         min_zoom: 8
         include_when:
           bicycle: [designated, official, yes]

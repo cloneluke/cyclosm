@@ -36,7 +36,7 @@
       "id": "roads-all",
       "type": "line",
       "source": "local-tiles",
-      "source-layer": "roads",
+      "source-layer": "transportation",
       "paint": {
         "line-color": [
           "match",
@@ -71,7 +71,7 @@
       "id": "cycleways",
       "type": "line",
       "source": "local-tiles",
-      "source-layer": "roads",
+      "source-layer": "transportation",
       "paint": {
         "line-color": [
           "match",
@@ -134,6 +134,71 @@
       }
     },
     {
+      "id": "bicycle-no",
+      "type": "line",
+      "source": "local-tiles",
+      "source-layer": "transportation",
+      "filter": ["==", ["get", "bicycle"], "no"],
+      "paint": {
+        "line-color": "#ff0000",
+        "line-width": {
+          "base": 1.2,
+          "stops": [
+            [10, 1.5],
+            [12, 2.5],
+            [16, 4]
+          ]
+        },
+        "line-opacity": 0.7
+      },
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "metadata": {
+        "mapbox:group": "Cycling"
+      }
+    },
+    {
+      "id": "trails",
+      "type": "line",
+      "source": "local-tiles",
+      "source-layer": "transportation",
+      "filter": ["in", ["get", "highway"], ["literal", ["path", "footway", "track", "steps", "pedestrian"]]],
+      "paint": {
+        "line-color": [
+          "match",
+          ["get", "highway"],
+          "path",
+          "#8B4513",
+          "footway",
+          "#D2691E",
+          "track",
+          "#A0522D",
+          "steps",
+          "#CD853F",
+          "#8B4513"
+        ],
+        "line-width": {
+          "base": 1.2,
+          "stops": [
+            [10, 0.5],
+            [12, 1.5],
+            [16, 3]
+          ]
+        },
+        "line-opacity": 0.85,
+        "line-dasharray": [2, 2]
+      },
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "metadata": {
+        "mapbox:group": "Cycling"
+      }
+    },
+    {
       "id": "poi-labels",
       "type": "symbol",
       "source": "local-tiles",
@@ -149,6 +214,64 @@
         "text-color": "#333333",
         "text-halo-color": "#ffffff",
         "text-halo-width": 1
+      }
+    },
+    {
+      "id": "place-labels-small",
+      "type": "symbol",
+      "source": "local-tiles",
+      "source-layer": "place",
+      "minzoom": 10,
+      "filter": ["in", ["get", "place"], ["literal", ["village", "hamlet", "suburb", "neighbourhood"]]],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+        "text-size": {
+          "stops": [
+            [10, 11],
+            [14, 14]
+          ]
+        },
+        "text-anchor": "center",
+        "text-offset": [0, 0.2],
+        "text-allow-overlap": false,
+        "text-optional": true
+      },
+      "paint": {
+        "text-color": "#444444",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 2,
+        "text-halo-blur": 1
+      }
+    },
+    {
+      "id": "place-labels-large",
+      "type": "symbol",
+      "source": "local-tiles",
+      "source-layer": "place",
+      "minzoom": 4,
+      "filter": ["in", ["get", "place"], ["literal", ["city", "town"]]],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+        "text-size": {
+          "stops": [
+            [4, 12],
+            [8, 16],
+            [12, 20]
+          ]
+        },
+        "text-anchor": "center",
+        "text-offset": [0, 0],
+        "text-allow-overlap": false,
+        "text-optional": false,
+        "symbol-sort-key": ["get", "population"]
+      },
+      "paint": {
+        "text-color": "#1a1a1a",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 3,
+        "text-halo-blur": 1
       }
     }
   ]

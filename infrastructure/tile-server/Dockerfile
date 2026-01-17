@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     nginx \
     gzip \
     osmium-tool \
+    osmctools \
     && rm -rf /var/lib/apt/lists/*
 
 # Create data directory
@@ -16,7 +17,7 @@ RUN curl -L https://github.com/onthegomap/planetiler/releases/download/v0.9.3/pl
     -o /usr/local/bin/planetiler.jar && \
     chmod +x /usr/local/bin/planetiler.jar
 
-# Copy configuration
+# Copy configuration and scripts
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY cyclosm-schema.yaml /cyclosm-schema.yaml
 COPY entrypoint.sh /entrypoint.sh

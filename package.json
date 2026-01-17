@@ -8,6 +8,7 @@
     "build": "pnpm -r build",
     "dev": "docker compose -f infrastructure/tile-server/docker-compose.yml up",
     "tile-gen": "docker compose -f infrastructure/tile-server/docker-compose.yml --profile tile-generation up planetiler",
+    "tiles:update": "bash ./scripts/update-tiles.sh",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format"
   },

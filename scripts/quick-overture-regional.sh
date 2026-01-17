@@ -14,6 +14,7 @@ declare -A STATE_BOUNDS=(
     ["colorado"]="-109.06,36.99,-102.05,41.00"
     ["minnesota"]="-97.24,43.50,-89.49,49.38"
     ["iowa"]="-96.64,40.38,-90.14,43.50"
+    ["tennessee"]="-90.31,35.00,-81.61,36.68"
 )
 
 function generate_state() {
